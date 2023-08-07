@@ -93,6 +93,8 @@ func NewClientConfig(registryCenterAddress string, clientHandler netty.ChannelHa
 		log.Fatal("new client config fatal: ", err)
 	}
 
+	fmt.Println(address)
+
 	clientConfig := createClientConfig()
 	serverConfigs := createServerConfig(address)
 	// 创建服务发现客户端的另一种方式 (推荐)
@@ -154,7 +156,7 @@ func initServerBootstrap(serverHandler netty.ChannelHandler, commonCodec netty.C
 		channel.Pipeline().
 			//AddLast(netty.ReadIdleHandler(time.Second * 3)).
 			//AddLast(netty.WriteIdleHandler(time.Second * 5)).
-			AddLast(frame.DelimiterCodec(1024, "\n", true)).
+			AddLast(frame.DelimiterCodec(1024, "$", true)).
 			AddLast(commonCodec).
 			AddLast(serverHandler)
 	}
@@ -169,7 +171,7 @@ func initClientBootstrap(clientHandler netty.ChannelHandler, commonCodec netty.C
 		channel.Pipeline().
 			//AddLast(netty.ReadIdleHandler(time.Second * 3)).
 			//AddLast(netty.WriteIdleHandler(time.Second * 5)).
-			AddLast(frame.DelimiterCodec(1024, "\n", true)).
+			AddLast(frame.DelimiterCodec(1024, "$", true)).
 			AddLast(commonCodec).
 			AddLast(clientHandler)
 	}

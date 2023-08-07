@@ -30,16 +30,12 @@ func RegisterPoint(pointType reflect.Type) {
 			defer guard.Restore()
 			receiver := in[0]
 			point := NewJoinPoint(receiver, in[1:], method)
+			fmt.Println("methodLocation", methodLocation)
 			defer finallyProcessed(point, methodLocation)
 			// 执行 前置处理
 			if !beforeProcessed(point, methodLocation) {
 				return point.Result
 			}
-			fmt.Println("初始化过程")
-			fmt.Println("获取接收者：" + receiverName)
-			fmt.Println("获取被代理函数：" + method.Name)
-			fmt.Println("获取函数参数: %s", in[1:])
-			fmt.Println("获取返回值: ")
 			for i := 0; i < method.Func.Type().NumOut(); i++ {
 				fmt.Printf("%s,", method.Func.Type().Out(i))
 			}

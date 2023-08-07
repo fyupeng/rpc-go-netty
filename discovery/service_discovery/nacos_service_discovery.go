@@ -5,8 +5,10 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/model"
 	"net"
 	"net/netip"
+	"rpc-go-netty/codec"
 	"rpc-go-netty/config"
 	"rpc-go-netty/discovery/load_balancer"
+	"rpc-go-netty/net/client"
 	"strconv"
 )
 
@@ -14,10 +16,10 @@ import (
 *
 服务消费者 实现 服务发现接口（服务消费者拥有了服务发现的行为）
 */
-func NewServiceConsumer(loadBalancer load_balancer.LoadBalancer, registryCenterAddress string, clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler) ServiceDiscovery {
+func NewServiceConsumer(loadBalancer load_balancer.LoadBalancer, registryCenterAddress string) ServiceDiscovery {
 
 	return &serviceConsumer{
-		ClientConfig: config.NewClientConfig(registryCenterAddress, clientHandler, commonCodec),
+		ClientConfig: config.NewClientConfig(registryCenterAddress, client.NewClientHandler(), codec.CommonCodec(0, 8, 1)),
 		LoadBalancer: loadBalancer,
 	}
 }

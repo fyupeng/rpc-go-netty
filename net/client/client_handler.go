@@ -48,7 +48,7 @@ func (h *clientHandler) HandleRead(ctx netty.InboundContext, message netty.Messa
 func (h *clientHandler) HandleException(ctx netty.ExceptionContext, ex netty.Exception) {
 	// 处理异常情况
 	fmt.Println("Exception caught:", ex)
-	ctx.HandleException(ex)
+	//ctx.HandleException(ex)
 }
 
 func (h *clientHandler) HandleEvent(ctx netty.EventContext, event netty.Event) {

@@ -10,7 +10,7 @@ func NewNacosServerStarter(serviceAddress, registerAddress string) ServerStart {
 
 	return &nacosServerStarter{
 		serverAddress:   serviceAddress,
-		serviceRegistry: service_registry.NewServiceProvider(serviceAddress, registerAddress, NewServerHandler(), codec.CommonCodec(0, 1024, 71, 0)),
+		serviceRegistry: service_registry.NewServiceProvider(serviceAddress, registerAddress, NewServerHandler(), codec.CommonCodec(0, 1024, 0)),
 	}
 
 }
@@ -28,7 +28,7 @@ func (server *nacosServerStarter) Start() (err error) {
 }
 
 func (server *nacosServerStarter) publishService() {
-	err := server.serviceRegistry.RegisterWithGroupName("helloService", "1.0.0")
+	err := server.serviceRegistry.RegisterWithGroupName("cn.fyupeng.service.HelloService", "1.0.0")
 	if err != nil {
 		log.Fatal("publish fatail: ", err)
 	}

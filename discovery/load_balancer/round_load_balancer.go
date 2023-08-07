@@ -2,19 +2,20 @@ package load_balancer
 
 import (
 	"errors"
-	"math/rand"
 	"reflect"
-	"time"
 )
 
-func NewRandLoadBalancer() LoadBalancer {
-	return &randLoadBalancer{}
+func NewRoundRobinLoadBalancer() LoadBalancer {
+	return &roundRobinLoadBalancer{
+		Index: 0,
+	}
 }
 
-type randLoadBalancer struct {
+type roundRobinLoadBalancer struct {
+	Index int
 }
 
-func (loadBalancer *randLoadBalancer) SelectService(services interface{}) (interface{}, error) {
+func (loadBalancer *roundRobinLoadBalancer) SelectService(services interface{}) (interface{}, error) {
 	servicesVal := reflect.ValueOf(services)
 
 	if servicesVal.Kind() != reflect.Slice {
@@ -29,15 +30,15 @@ func (loadBalancer *randLoadBalancer) SelectService(services interface{}) (inter
 	//	var empty interface{}
 	//	return empty, errors.New("loadBalancer can't discover service!")
 	//}
-	rand.Seed(time.Now().Unix())
 	//return services[rand.Int()], nil
-	return servicesVal.Index(rand.Intn(servicesVal.Len())).Interface(), nil
+	loadBalancer.Index += 1
+	return servicesVal.Index(loadBalancer.Index % servicesVal.Len()).Interface(), nil
 }
 
-func (loadBalancer *randLoadBalancer) SelectNode(nodes []string) (string, error) {
+func (loadBalancer *roundRobinLoadBalancer) SelectNode(nodes []string) (string, error) {
 	if len(nodes) == 0 {
 		return "", errors.New("loadBalancer can't discover service!")
 	}
-	rand.Seed(time.Now().Unix())
-	return nodes[rand.Int()], nil
+	loadBalancer.Index += 1
+	return nodes[loadBalancer.Index%len(nodes)], nil
 }

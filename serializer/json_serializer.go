@@ -1,12 +1,17 @@
 package serializer
 
-import "encoding/json"
+import (
+	"fmt"
+	jsoniter "github.com/json-iterator/go"
+)
 
 /**
 Json 序列化 实现 公共序列化 接口
 */
 
-func JsonSerializer() CommonSerializer {
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+func NewJsonSerializer() CommonSerializer {
 	return &jsonSerializer{
 		Value: 1,
 	}
@@ -21,8 +26,11 @@ func (jsonSerializer *jsonSerializer) Serialize(message any) (data []byte, err e
 	return
 }
 
-func (jsonSerializer *jsonSerializer) Deserialize(data []byte, message any) (err error) {
+func (jsonSerializer *jsonSerializer) Deserialize(data []byte, message interface{}) (target any, err error) {
+	fmt.Println(message)
 	err = json.Unmarshal(data, message)
+	target = message
+	fmt.Println("message ", message)
 	return
 }
 

@@ -8,7 +8,6 @@ import (
 	"github.com/go-netty/go-netty/codec"
 	"github.com/go-netty/go-netty/utils"
 	"log"
-	"reflect"
 	"rpc-go-netty/protocol"
 	"rpc-go-netty/serializer"
 )
@@ -20,24 +19,22 @@ const (
 	DataLengthTypeLength      = 4
 )
 
-func CommonCodec(lengthFieldOffset int, lengthFieldLength int, packageProtocolType int, serializationType int) codec.Codec {
+func CommonCodec(lengthFieldOffset int, lengthFieldLength int, serializationType int) codec.Codec {
 	utils.AssertIf(lengthFieldOffset < 0, "maxFrameLength must be a positive integer")
 	utils.AssertIf(lengthFieldLength <= 0, "delimiter must be nonempty string")
 	return &commonCodec{
-		magicNumber:         0xBABE,
-		packageProtocolType: packageProtocolType,
-		serializationType:   serializationType,
-		lengthFieldOffset:   lengthFieldOffset,
-		lengthFieldLength:   lengthFieldLength,
+		magicNumber:       0xBABE,
+		serializationType: serializationType,
+		lengthFieldOffset: lengthFieldOffset,
+		lengthFieldLength: lengthFieldLength,
 	}
 }
 
 type commonCodec struct {
-	magicNumber         int // 魔数
-	packageProtocolType int // 包协议类型
-	serializationType   int // 序列化类型
-	lengthFieldOffset   int // 协议头偏移
-	lengthFieldLength   int // 协议头长度
+	magicNumber       int // 魔数
+	serializationType int // 序列化类型
+	lengthFieldOffset int // 协议头偏移
+	lengthFieldLength int // 协议头长度
 }
 
 func (*commonCodec) CodecName() string {
@@ -50,24 +47,29 @@ func (codec *commonCodec) HandleWrite(ctx netty.OutboundContext, message netty.M
 
 	fmt.Println("message ", message)
 
+	fmt.Println(message)
+
 	// 构建协议头字节流
 	protocolHeader := make([]byte, codec.lengthFieldLength)
 	// 设置魔数（Magic Number）
 	buffIdx := codec.lengthFieldOffset
 	binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+MagicNumberLength], uint16(codec.magicNumber))
 	buffIdx += MagicNumberLength
+
 	// 设置协议包类型
+	packageProtocolType := transProtocolCode(message)
+
 	switch PackageProtocolTypeLength {
 	case 1:
-		protocolHeader[buffIdx] = byte(codec.packageProtocolType)
+		protocolHeader[buffIdx] = byte(packageProtocolType)
 	case 2:
-		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint16(codec.packageProtocolType))
+		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint16(packageProtocolType))
 	case 3:
-		binary.BigEndian.PutUint32(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint32(codec.packageProtocolType))
+		binary.BigEndian.PutUint32(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint32(packageProtocolType))
 	case 4:
-		binary.BigEndian.PutUint64(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint64(codec.packageProtocolType))
+		binary.BigEndian.PutUint64(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint64(packageProtocolType))
 	default:
-		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint16(codec.packageProtocolType))
+		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint16(packageProtocolType))
 	}
 	buffIdx += PackageProtocolTypeLength
 	// 设置序列化类型
@@ -89,22 +91,17 @@ func (codec *commonCodec) HandleWrite(ctx netty.OutboundContext, message netty.M
 	serial := GetSerializerByCode(codec.serializationType)
 
 	serializedDataBytes, err := serial.Serialize(message)
+	utils.AssertIf(err != nil, "serialize fatail: ", err)
 
 	dataLength := len(serializedDataBytes)
 	fmt.Println("序列化后的数据长度：", dataLength)
 	binary.BigEndian.PutUint32(protocolHeader[buffIdx:buffIdx+DataLengthTypeLength], uint32(dataLength))
 
+	fmt.Println(protocolHeader)
+
 	// 将协议头和数据部分拼接，形成最终的编码后的字节流
-
-	testDeserialize := protocol.NewRpcRequestProtocol()
-	err1 := serial.Deserialize(serializedDataBytes, &testDeserialize)
-	if err1 != nil {
-		log.Fatal("err1: ", err1)
-	}
-
-	utils.AssertIf(err != nil, "serialize fatail: ", err)
-
 	encodedData := append(protocolHeader, serializedDataBytes...)
+	//encodedData = append(encodedData, '$')
 
 	ctx.HandleWrite(encodedData)
 }
@@ -114,6 +111,8 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 	fmt.Println("common_codec 正在读取数据，正在解码")
 
 	dataBytesa := utils.MustToBytes(message)
+
+	fmt.Println(dataBytesa)
 
 	reader := utils.MustToReader(dataBytesa)
 
@@ -137,8 +136,15 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 		n := utils.AssertLength(reader.Read(tempBuff[:]))
 		readBuff = append(readBuff, tempBuff[:n]...)
 	}
-	packageProtocolType := getPackageProtocolTypeByCode(BytesToInt(readBuff))
-	utils.AssertIf(packageProtocolType == nil, "Invalid package protocol type:%X", readBuff)
+
+	packageProtocol := getProtocolByCode(BytesToInt(readBuff))
+
+	fmt.Println("123")
+	fmt.Println(packageProtocol)
+
+	fmt.Println(&protocol.RpcResponseProtocol1{})
+
+	utils.AssertIf(packageProtocol == nil, "Invalid package protocol type:%X", readBuff)
 
 	// 读取序列化协议（1字节）
 	readBuff = make([]byte, 0, SerializationTypeLength)
@@ -146,8 +152,8 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 		n := utils.AssertLength(reader.Read(tempBuff[:]))
 		readBuff = append(readBuff, tempBuff[:n]...)
 	}
-	serializationType := GetSerializerByCode(codec.serializationType)
-	utils.AssertIf(serializationType == nil, "Invalid serializer type:%X", readBuff)
+	serializaer := GetSerializerByCode(codec.serializationType)
+	utils.AssertIf(serializaer == nil, "Invalid serializer type:%X", readBuff)
 	// 读取数据长度（4字节）
 	readBuff = make([]byte, 0, DataLengthTypeLength)
 	for len(readBuff) < DataLengthTypeLength {
@@ -155,6 +161,8 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 		readBuff = append(readBuff, tempBuff[:n]...)
 	}
 	dataLength := BytesToInt(readBuff)
+
+	fmt.Println("dataLength ", dataLength)
 
 	// 读取数据（${dataLength} 字节）
 	readBuff = make([]byte, 0, dataLength)
@@ -165,17 +173,24 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 	dataBytes := readBuff
 
 	// 根据序列化协议 反序列化
-	deserializedObject := protocol.NewRpcRequestProtocol()
-	err := serializationType.Deserialize(dataBytes, &deserializedObject)
+	data0, err0 := serializaer.Deserialize(dataBytes, &protocol.RpcResponseProtocol1{})
 
-	if err != nil {
-		log.Fatal("serializationType["+TransSerializationType(serializationType.GetValue())+"] deserialize failed：", err)
+	fmt.Println("data0 ", data0)
+
+	if err0 != nil {
+		log.Fatal("err0: ", err0)
 	}
 
-	fmt.Println("反序列化成功： ", deserializedObject)
+	data, err1 := serializaer.Deserialize(dataBytes, packageProtocol)
+
+	fmt.Println("data ", data)
+
+	if err1 != nil {
+		log.Fatal("dataBytes deserialize failed：", err1)
+	}
 
 	// post message
-	ctx.HandleRead(deserializedObject)
+	ctx.HandleRead(packageProtocol)
 
 }
 
@@ -187,48 +202,42 @@ type Result struct {
 
 func GetSerializerByCode(serializationTypeCode int) (serial serializer.CommonSerializer) {
 	switch serializationTypeCode {
-	case 0:
-		serial = serializer.KryoSerializer()
-	case 1:
-		serial = serializer.JsonSerializer()
-	case 2:
-		serial = serializer.HessianSerializer()
+	case serializer.KryoSerializerCode:
+		serial = serializer.NewKryoSerializer()
+	case serializer.JsonSerializerCode:
+		serial = serializer.NewJsonSerializer()
+	case serializer.HessianSerializerCode:
+		serial = serializer.NewHessianSerializer()
 	default:
 	}
 	return
 }
 
-func TransSerializationType(serializationType int) (serial string) {
-	switch serializationType {
-	case 0:
-		serial = "hryo"
-	case 1:
-		serial = "json"
-	case 2:
-		serial = "hessian"
+func getProtocolByCode(protocolCode int) (proto protocol.Protocol) {
+	switch protocolCode {
+	case protocol.RequestProtocolCode:
+		proto = protocol.NewRpcRequestProtocol()
+	case protocol.ResponseProtocolCode:
+		proto = protocol.NewRpcResponseProtocol()
+	case protocol.UnRecognizeProtocolCode:
+		log.Println("unrecognized protocol:", protocolCode)
 	default:
+		log.Println("unrecognized protocol:", protocolCode)
 	}
 	return
 }
 
-func getPackageProtocolTypeByCode(protocolTypeCode int) (typ reflect.Type) {
-	switch protocolTypeCode {
-	case 71:
-		typ = reflect.TypeOf(protocol.NewRpcRequestProtocol())
-	case 73:
-		typ = reflect.TypeOf(protocol.NewRpcResponseProtocol())
+func transProtocolCode(proto protocol.Protocol) (protocolCode int) {
+	switch proto.(type) {
+	case protocol.RequestProtocol:
+		// 处理请求逻辑
+		protocolCode = protocol.RequestProtocolCode
+	case protocol.ResponseProtocol:
+		// 处理响应逻辑
+		protocolCode = protocol.ResponseProtocolCode
 	default:
-	}
-	return
-}
-
-func transPackageProtocolType(protocolType int) (proto string) {
-	switch protocolType {
-	case 71:
-		proto = "q"
-	case 73:
-		proto = "s"
-	default:
+		// 处理其他情况
+		protocolCode = protocol.UnRecognizeProtocolCode
 	}
 	return
 }

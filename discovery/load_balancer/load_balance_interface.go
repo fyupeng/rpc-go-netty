@@ -1,6 +1,6 @@
 package load_balancer
 
-type LoadBalanceInterface interface {
+type LoadBalancer interface {
 	SelectService(services interface{}) (interface{}, error)
 
 	SelectNode(nodes []string) (string, error)

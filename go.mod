@@ -12,13 +12,17 @@ require (
 require (
 	bou.ke/monkey v1.0.2 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.62.388 // indirect
+	github.com/apache/dubbo-go-hessian2 v1.12.2 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dubbogo/gost v1.13.1 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
+	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b // indirect

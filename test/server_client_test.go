@@ -1,10 +1,13 @@
-package main
+package test
 
 import (
 	"fmt"
 	"github.com/go-netty/go-netty"
 	"github.com/go-netty/go-netty/codec/frame"
 	"log"
+	"reflect"
+	"rpc-go-netty/aop"
+	"rpc-go-netty/cn/fyupeng/service"
 	"rpc-go-netty/codec"
 	"rpc-go-netty/discovery/load_balancer"
 	"rpc-go-netty/discovery/service_discovery"
@@ -15,9 +18,13 @@ import (
 	"time"
 )
 
+func TestProxy(t *testing.T) {
+	h := aop.NewClientProxy(service_discovery.NewServiceConsumer(load_balancer.NewRandLoadBalancer(), "127.0.0.1:8848"))
+	h.Invoke(reflect.TypeOf((*service.HelloWorldService)(nil)), "sayHello", []interface{}{"这是go代理端"})
+}
 func TestClient(t *testing.T) {
 
-	serviceConsumer := service_discovery.NewServiceConsumer(load_balancer.LoadBalancer{}, "127.0.0.1:8848", client.NewClientHandler(), codec.CommonCodec(0, 1024, 71, 0))
+	serviceConsumer := service_discovery.NewServiceConsumer(load_balancer.NewRandLoadBalancer(), "127.0.0.1:8848")
 
 	fmt.Println(serviceConsumer)
 
@@ -76,20 +83,20 @@ func TestClient1(t *testing.T) {
 	var clientnitializer = func(channel netty.Channel) {
 		channel.Pipeline().
 			// 最大允许包长128字节，使用\n分割包, 丢弃分隔符
-			AddLast(frame.DelimiterCodec(1024, "\r\n", true)).
+			AddLast(frame.DelimiterCodec(1024, "$", true)).
 			//AddLast(frame.LengthFieldCodec(binary.BigEndian, 2048, 8, 2, 12, 0)).
 			AddLast(netty.ReadIdleHandler(time.Second*3), netty.WriteIdleHandler(time.Second*5)).
-			AddLast(codec.CommonCodec(0, 8, 71, 1)).
+			AddLast(codec.CommonCodec(0, 8, 1)).
 			AddLast(client.NewClientHandler())
 	}
 
-	channel, err1 := netty.NewBootstrap(netty.WithClientInitializer(clientnitializer)).Connect(":9528")
+	channel, err1 := netty.NewBootstrap(netty.WithClientInitializer(clientnitializer)).Connect(":9527")
 	if err1 != nil {
 		log.Fatal("channel err: ", err1)
 		return
 	}
 
-	parameters := []interface{}{"hello，this is go language"}
+	parameters := []interface{}{"hello, 服务端, this is go language"}
 
 	message := protocol.RpcRequestProtocol("123455", "helloService", "sayHello", parameters,
 		[]string{"java.lang.String"}, "java.lang.String", false, "1.0.1", false)
@@ -109,10 +116,9 @@ func TestServer1(t *testing.T) {
 	var childInitializer = func(channel netty.Channel) {
 		channel.Pipeline().
 			// 最大允许包长128字节，使用\n分割包, 丢弃分隔符
-			AddLast(frame.DelimiterCodec(1024, "\r\n", true)).
+			AddLast(frame.DelimiterCodec(1024, "$", true)).
 			AddLast(netty.ReadIdleHandler(time.Second * 30)).
-			//AddLast(frame.LengthFieldCodec(binary.BigEndian, 2048, 8, 2, 12, 0)).
-			AddLast(codec.CommonCodec(0, 8, 71, 1)).
+			AddLast(codec.CommonCodec(0, 8, 1)).
 			AddLast(server.NewServerHandler())
 	}
 
