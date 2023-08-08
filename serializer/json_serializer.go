@@ -1,7 +1,6 @@
 package serializer
 
 import (
-	"fmt"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -27,10 +26,8 @@ func (jsonSerializer *jsonSerializer) Serialize(message any) (data []byte, err e
 }
 
 func (jsonSerializer *jsonSerializer) Deserialize(data []byte, message interface{}) (target any, err error) {
-	fmt.Println(message)
 	err = json.Unmarshal(data, message)
 	target = message
-	fmt.Println("message ", message)
 	return
 }
 

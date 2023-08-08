@@ -3,6 +3,7 @@ package codec
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"github.com/go-netty/go-netty"
 	"github.com/go-netty/go-netty/codec"
@@ -142,8 +143,6 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 	fmt.Println("123")
 	fmt.Println(packageProtocol)
 
-	fmt.Println(&protocol.RpcResponseProtocol1{})
-
 	utils.AssertIf(packageProtocol == nil, "Invalid package protocol type:%X", readBuff)
 
 	// 读取序列化协议（1字节）
@@ -152,8 +151,8 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 		n := utils.AssertLength(reader.Read(tempBuff[:]))
 		readBuff = append(readBuff, tempBuff[:n]...)
 	}
-	serializaer := GetSerializerByCode(codec.serializationType)
-	utils.AssertIf(serializaer == nil, "Invalid serializer type:%X", readBuff)
+	seria := GetSerializerByCode(BytesToInt(readBuff))
+	utils.AssertIf(seria == nil, "Invalid serializer type:%X", readBuff)
 	// 读取数据长度（4字节）
 	readBuff = make([]byte, 0, DataLengthTypeLength)
 	for len(readBuff) < DataLengthTypeLength {
@@ -173,15 +172,20 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 	dataBytes := readBuff
 
 	// 根据序列化协议 反序列化
-	data0, err0 := serializaer.Deserialize(dataBytes, &protocol.RpcResponseProtocol1{})
-
-	fmt.Println("data0 ", data0)
-
-	if err0 != nil {
-		log.Fatal("err0: ", err0)
+	var mes any
+	err := json.Unmarshal(dataBytes, &mes)
+	if err != nil {
+		log.Fatal("err: ", err)
 	}
+	fmt.Println(mes)
 
-	data, err1 := serializaer.Deserialize(dataBytes, packageProtocol)
+	mess := protocol.NewRpcRequestProtocol()
+
+	json.Unmarshal(dataBytes, &mess)
+
+	fmt.Println(mess)
+
+	data, err1 := seria.Deserialize(dataBytes, packageProtocol)
 
 	fmt.Println("data ", data)
 
@@ -190,7 +194,7 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 	}
 
 	// post message
-	ctx.HandleRead(packageProtocol)
+	ctx.HandleRead(data)
 
 }
 

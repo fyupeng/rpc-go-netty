@@ -28,7 +28,7 @@ func (server *nacosServerStarter) Start() (err error) {
 }
 
 func (server *nacosServerStarter) publishService() {
-	err := server.serviceRegistry.RegisterWithGroupName("cn.fyupeng.service.HelloService", "1.0.0")
+	err := server.serviceRegistry.RegisterWithGroupName("cn.fyupeng.service.HelloWorldService", "1.0.0")
 	if err != nil {
 		log.Fatal("publish fatail: ", err)
 	}

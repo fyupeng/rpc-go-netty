@@ -1,9 +1,11 @@
 package test
 
 import (
+	"encoding/json"
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"log"
+	"rpc-go-netty/protocol"
 	"rpc-go-netty/serializer"
 	"testing"
 )
@@ -55,4 +57,88 @@ func TestSerializer(t *testing.T) {
 		fmt.Println("decodData is ok", obj1)
 	}
 
+}
+
+type people interface {
+}
+
+func NewPeople(idx int) people {
+	switch idx {
+	case 0:
+		return &student{}
+	case 1:
+		return &teacher{}
+	}
+	return &student{}
+}
+
+type student struct {
+	Name    string
+	Age     int
+	Sex     bool
+	Tuition int
+}
+
+type teacher struct {
+	Name   string
+	Age    int
+	Sex    bool
+	Salary int
+}
+
+func TestStudentDeserialized(t *testing.T) {
+	student := student{
+		Name:    "小明",
+		Age:     18,
+		Sex:     true,
+		Tuition: 8500,
+	}
+	studentBinary, err := json.Marshal(student)
+	if err != nil {
+		log.Fatal("序列化失败！", err)
+	}
+	fmt.Println("序列化成功：", studentBinary)
+	// 动态获取请求
+	idx := 0
+	message := NewPeople(idx)
+	// 动态选择 people 序列化
+	err = json.Unmarshal(studentBinary, message)
+	if err != nil {
+		log.Fatal("反序列化失败", err)
+	}
+	fmt.Println("反序列化成功：", message)
+}
+
+func getProtocolByCode(protocolCode int) (proto protocol.Protocol) {
+	switch protocolCode {
+	case protocol.RequestProtocolCode:
+		proto = protocol.NewRpcRequestProtocol()
+	case protocol.ResponseProtocolCode:
+		proto = protocol.NewRpcResponseProtocol()
+	case protocol.UnRecognizeProtocolCode:
+		log.Println("unrecognized protocol:", protocolCode)
+	default:
+		log.Println("unrecognized protocol:", protocolCode)
+	}
+	return
+}
+
+func TestProtocolDeserialized(t *testing.T) {
+	//proto := protocol.RpcRequestProtocol("123455", "HelloService", "sayHello", []interface{}{"arg0", "arg1"},
+	//	[]string{"string", "string"}, "string", false, "1.0.1", false)
+	proto := protocol.RpcResponseProtocol("123455", []byte{1, 2, 3, 51, 2}, 200, "测试消息", "这是服务端消息")
+	protocolBinary, err := json.Marshal(proto)
+	if err != nil {
+		log.Fatal("序列化失败！", err)
+	}
+	fmt.Println("序列化成功：", protocolBinary)
+	// 动态获取请求
+	idx := protocol.ResponseProtocolCode
+	message := getProtocolByCode(idx)
+	// 动态选择 people 序列化
+	err = json.Unmarshal(protocolBinary, message)
+	if err != nil {
+		log.Fatal("反序列化失败", err)
+	}
+	fmt.Println("反序列化成功：", message)
 }

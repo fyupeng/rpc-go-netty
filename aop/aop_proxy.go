@@ -73,16 +73,16 @@ func (proxy *clientProxy) Invoke(interfaceType reflect.Type, methodName string, 
 		paramTypes[i] = methodType.In(i).String()
 	}
 
-	paramTypes = adaptParamTypes("java", paramTypes)
+	paramTypes = adaptParamTypes("go", paramTypes)
 
 	returnTypes := make([]string, methodType.NumOut())
 	for i := 0; i < len(returnTypes); i++ {
 		returnTypes[i] = methodType.Out(i).String()
 	}
 
-	returnTypes = adaptReturnTypes("java", returnTypes)
+	returnTypes = adaptReturnTypes("go", returnTypes)
 
-	serviceAddr, getServiceErr := proxy.ServiceConsumer.LookupServiceWithGroupName(interfaceName, "1.0.1")
+	serviceAddr, getServiceErr := proxy.ServiceConsumer.LookupServiceWithGroupName(interfaceName, "1.0.0")
 
 	if getServiceErr != nil {
 		log.Fatal("get Service Fatal: ", getServiceErr)
@@ -95,7 +95,7 @@ func (proxy *clientProxy) Invoke(interfaceType reflect.Type, methodName string, 
 	fmt.Println("channel: ", channel)
 
 	message := protocol.RpcRequestProtocol("123455", interfaceName, methodName, parameters,
-		paramTypes, returnTypes[0], false, "1.0.1", false)
+		paramTypes, returnTypes[0], false, "1.0.0", false)
 
 	err := channel.Write(message)
 	if err != nil {

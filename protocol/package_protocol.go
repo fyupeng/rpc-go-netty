@@ -52,8 +52,8 @@ type rpcRequestProtocol struct {
 *
 RPC 响应协议
 */
-func RpcResponseProtocol(requestId string, checkCode string, statusCode int, message string, data interface{}) ResponseProtocol {
-	return &RpcResponseProtocol1{
+func RpcResponseProtocol(requestId string, checkCode []byte, statusCode int, message string, data interface{}) ResponseProtocol {
+	return &rpcResponseProtocol{
 		RequestId:  requestId,
 		CheckCode:  checkCode,
 		StatusCode: statusCode,
@@ -63,12 +63,12 @@ func RpcResponseProtocol(requestId string, checkCode string, statusCode int, mes
 }
 
 func NewRpcResponseProtocol() ResponseProtocol {
-	return &RpcResponseProtocol1{}
+	return &rpcResponseProtocol{}
 }
 
-type RpcResponseProtocol1 struct {
+type rpcResponseProtocol struct {
 	RequestId  string      `json:"requestId"`
-	CheckCode  string      `json:"checkCode"`
+	CheckCode  []byte      `json:"checkCode"`
 	StatusCode int         `json:"statusCode"`
 	Message    string      `json:"message"`
 	Data       interface{} `json:"data"`
