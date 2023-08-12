@@ -1,7 +1,7 @@
 package server
 
-type ServerStart interface {
+type RpcServer interface {
 	Start() (err error)
 
-	publishService()
+	PublishService(services ...interface{})
 }

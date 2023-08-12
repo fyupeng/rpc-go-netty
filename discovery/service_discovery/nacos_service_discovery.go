@@ -8,7 +8,7 @@ import (
 	"rpc-go-netty/codec"
 	"rpc-go-netty/config"
 	"rpc-go-netty/discovery/load_balancer"
-	"rpc-go-netty/net/client"
+	"rpc-go-netty/net/handler"
 	"strconv"
 )
 
@@ -16,10 +16,10 @@ import (
 *
 服务消费者 实现 服务发现接口（服务消费者拥有了服务发现的行为）
 */
-func NewServiceConsumer(loadBalancer load_balancer.LoadBalancer, registryCenterAddress string) ServiceDiscovery {
+func NewServiceConsumer(loadBalancer load_balancer.LoadBalancer, serializerCode int, registryCenterAddress string) ServiceDiscovery {
 
 	return &serviceConsumer{
-		ClientConfig: config.NewClientConfig(registryCenterAddress, client.NewClientHandler(), codec.CommonCodec(0, 8, 1)),
+		ClientConfig: config.NewClientConfig(registryCenterAddress, handler.NewClientHandler(), codec.CommonCodec(0, 8, serializerCode)),
 		LoadBalancer: loadBalancer,
 	}
 }

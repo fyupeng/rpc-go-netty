@@ -27,7 +27,7 @@ func (loadBalancer *randLoadBalancer) SelectService(services interface{}) (inter
 
 	//if len(services) == 0 {
 	//	var empty interface{}
-	//	return empty, errors.New("loadBalancer can't discover service!")
+	//	return empty, errors.New("loadBalancer can't discover cn.fyupeng.service!")
 	//}
 	rand.Seed(time.Now().Unix())
 	//return services[rand.Int()], nil
@@ -36,7 +36,7 @@ func (loadBalancer *randLoadBalancer) SelectService(services interface{}) (inter
 
 func (loadBalancer *randLoadBalancer) SelectNode(nodes []string) (string, error) {
 	if len(nodes) == 0 {
-		return "", errors.New("loadBalancer can't discover service!")
+		return "", errors.New("loadBalancer can't discover cn.fyupeng.service!")
 	}
 	rand.Seed(time.Now().Unix())
 	return nodes[rand.Int()], nil

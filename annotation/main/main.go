@@ -78,7 +78,7 @@ func AutoRegister(packagePath string) {
 // 解析注解
 func parseAnnotation(comment string) *Annotation {
 	// 在这里添加解析注解的逻辑，可以根据你的注解格式进行解析
-	// 这里只是一个示例，假设注解格式为 @Register("service", "arg1", "arg2")
+	// 这里只是一个示例，假设注解格式为 @Register("cn.fyupeng.service", "arg1", "arg2")
 	if comment[:9] != "@Register" {
 		return nil
 	}

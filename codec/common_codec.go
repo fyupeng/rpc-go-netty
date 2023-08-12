@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"github.com/go-netty/go-netty"
 	"github.com/go-netty/go-netty/codec"
 	"github.com/go-netty/go-netty/utils"
@@ -14,18 +13,18 @@ import (
 )
 
 const (
-	MagicNumberLength         = 2
-	PackageProtocolTypeLength = 1
-	SerializationTypeLength   = 1
-	DataLengthTypeLength      = 4
+	MagicNumberLength       = 2
+	ProtocolCodeLength      = 1
+	SerializationCodeLength = 1
+	DataLengthCodeLength    = 4
 )
 
-func CommonCodec(lengthFieldOffset int, lengthFieldLength int, serializationType int) codec.Codec {
+func CommonCodec(lengthFieldOffset int, lengthFieldLength int, serializerCode int) codec.Codec {
 	utils.AssertIf(lengthFieldOffset < 0, "maxFrameLength must be a positive integer")
 	utils.AssertIf(lengthFieldLength <= 0, "delimiter must be nonempty string")
 	return &commonCodec{
 		magicNumber:       0xBABE,
-		serializationType: serializationType,
+		serializerCode:    serializerCode,
 		lengthFieldOffset: lengthFieldOffset,
 		lengthFieldLength: lengthFieldLength,
 	}
@@ -33,7 +32,7 @@ func CommonCodec(lengthFieldOffset int, lengthFieldLength int, serializationType
 
 type commonCodec struct {
 	magicNumber       int // 魔数
-	serializationType int // 序列化类型
+	serializerCode    int // 序列化类型
 	lengthFieldOffset int // 协议头偏移
 	lengthFieldLength int // 协议头长度
 }
@@ -44,12 +43,6 @@ func (*commonCodec) CodecName() string {
 
 func (codec *commonCodec) HandleWrite(ctx netty.OutboundContext, message netty.Message) {
 
-	fmt.Println("codec 准备写入数据，正在编码")
-
-	fmt.Println("message ", message)
-
-	fmt.Println(message)
-
 	// 构建协议头字节流
 	protocolHeader := make([]byte, codec.lengthFieldLength)
 	// 设置魔数（Magic Number）
@@ -58,47 +51,44 @@ func (codec *commonCodec) HandleWrite(ctx netty.OutboundContext, message netty.M
 	buffIdx += MagicNumberLength
 
 	// 设置协议包类型
-	packageProtocolType := transProtocolCode(message)
+	protocolCode := transProtocolCode(message)
 
-	switch PackageProtocolTypeLength {
+	switch ProtocolCodeLength {
 	case 1:
-		protocolHeader[buffIdx] = byte(packageProtocolType)
+		protocolHeader[buffIdx] = byte(protocolCode)
 	case 2:
-		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint16(packageProtocolType))
+		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+ProtocolCodeLength], uint16(protocolCode))
 	case 3:
-		binary.BigEndian.PutUint32(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint32(packageProtocolType))
+		binary.BigEndian.PutUint32(protocolHeader[buffIdx:buffIdx+ProtocolCodeLength], uint32(protocolCode))
 	case 4:
-		binary.BigEndian.PutUint64(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint64(packageProtocolType))
+		binary.BigEndian.PutUint64(protocolHeader[buffIdx:buffIdx+ProtocolCodeLength], uint64(protocolCode))
 	default:
-		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint16(packageProtocolType))
+		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+ProtocolCodeLength], uint16(protocolCode))
 	}
-	buffIdx += PackageProtocolTypeLength
+	buffIdx += ProtocolCodeLength
 	// 设置序列化类型
-	switch SerializationTypeLength {
+	switch ProtocolCodeLength {
 	case 1:
-		protocolHeader[buffIdx] = byte(codec.serializationType)
+		protocolHeader[buffIdx] = byte(codec.serializerCode)
 	case 2:
-		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+SerializationTypeLength], uint16(codec.serializationType))
+		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+SerializationCodeLength], uint16(codec.serializerCode))
 	case 3:
-		binary.BigEndian.PutUint32(protocolHeader[buffIdx:buffIdx+SerializationTypeLength], uint32(codec.serializationType))
+		binary.BigEndian.PutUint32(protocolHeader[buffIdx:buffIdx+SerializationCodeLength], uint32(codec.serializerCode))
 	case 4:
-		binary.BigEndian.PutUint64(protocolHeader[buffIdx:buffIdx+SerializationTypeLength], uint64(codec.serializationType))
+		binary.BigEndian.PutUint64(protocolHeader[buffIdx:buffIdx+SerializationCodeLength], uint64(codec.serializerCode))
 	default:
-		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+PackageProtocolTypeLength], uint16(codec.serializationType))
+		binary.BigEndian.PutUint16(protocolHeader[buffIdx:buffIdx+SerializationCodeLength], uint16(codec.serializerCode))
 	}
-	buffIdx += SerializationTypeLength
+	buffIdx += SerializationCodeLength
 
 	// 设置数据长度 - 先序列化数据，再计算长度
-	serial := GetSerializerByCode(codec.serializationType)
+	serial := GetSerializerByCode(codec.serializerCode)
 
 	serializedDataBytes, err := serial.Serialize(message)
 	utils.AssertIf(err != nil, "serialize fatail: ", err)
 
 	dataLength := len(serializedDataBytes)
-	fmt.Println("序列化后的数据长度：", dataLength)
-	binary.BigEndian.PutUint32(protocolHeader[buffIdx:buffIdx+DataLengthTypeLength], uint32(dataLength))
-
-	fmt.Println(protocolHeader)
+	binary.BigEndian.PutUint32(protocolHeader[buffIdx:buffIdx+DataLengthCodeLength], uint32(dataLength))
 
 	// 将协议头和数据部分拼接，形成最终的编码后的字节流
 	encodedData := append(protocolHeader, serializedDataBytes...)
@@ -109,11 +99,7 @@ func (codec *commonCodec) HandleWrite(ctx netty.OutboundContext, message netty.M
 
 func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Message) {
 
-	fmt.Println("common_codec 正在读取数据，正在解码")
-
 	dataBytesa := utils.MustToBytes(message)
-
-	fmt.Println(dataBytesa)
 
 	reader := utils.MustToReader(dataBytesa)
 
@@ -132,36 +118,31 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 	}
 
 	// 读取协议头字段（1字节）
-	readBuff = make([]byte, 0, PackageProtocolTypeLength)
-	for len(readBuff) < PackageProtocolTypeLength {
+	readBuff = make([]byte, 0, ProtocolCodeLength)
+	for len(readBuff) < ProtocolCodeLength {
 		n := utils.AssertLength(reader.Read(tempBuff[:]))
 		readBuff = append(readBuff, tempBuff[:n]...)
 	}
 
 	packageProtocol := getProtocolByCode(BytesToInt(readBuff))
 
-	fmt.Println("123")
-	fmt.Println(packageProtocol)
-
 	utils.AssertIf(packageProtocol == nil, "Invalid package protocol type:%X", readBuff)
 
 	// 读取序列化协议（1字节）
-	readBuff = make([]byte, 0, SerializationTypeLength)
-	for len(readBuff) < SerializationTypeLength {
+	readBuff = make([]byte, 0, SerializationCodeLength)
+	for len(readBuff) < SerializationCodeLength {
 		n := utils.AssertLength(reader.Read(tempBuff[:]))
 		readBuff = append(readBuff, tempBuff[:n]...)
 	}
 	seria := GetSerializerByCode(BytesToInt(readBuff))
 	utils.AssertIf(seria == nil, "Invalid serializer type:%X", readBuff)
 	// 读取数据长度（4字节）
-	readBuff = make([]byte, 0, DataLengthTypeLength)
-	for len(readBuff) < DataLengthTypeLength {
+	readBuff = make([]byte, 0, DataLengthCodeLength)
+	for len(readBuff) < DataLengthCodeLength {
 		n := utils.AssertLength(reader.Read(tempBuff[:]))
 		readBuff = append(readBuff, tempBuff[:n]...)
 	}
 	dataLength := BytesToInt(readBuff)
-
-	fmt.Println("dataLength ", dataLength)
 
 	// 读取数据（${dataLength} 字节）
 	readBuff = make([]byte, 0, dataLength)
@@ -177,17 +158,8 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 	if err != nil {
 		log.Fatal("err: ", err)
 	}
-	fmt.Println(mes)
-
-	mess := protocol.NewRpcRequestProtocol()
-
-	json.Unmarshal(dataBytes, &mess)
-
-	fmt.Println(mess)
 
 	data, err1 := seria.Deserialize(dataBytes, packageProtocol)
-
-	fmt.Println("data ", data)
 
 	if err1 != nil {
 		log.Fatal("dataBytes deserialize failed：", err1)

@@ -88,14 +88,12 @@ func (proxy *clientProxy) Invoke(interfaceType reflect.Type, methodName string, 
 		log.Fatal("get Service Fatal: ", getServiceErr)
 	}
 
-	fmt.Println("serviceAddr is " + serviceAddr.String())
-
 	channel := proxy.ServiceConsumer.GetChannel(serviceAddr.String())
-
-	fmt.Println("channel: ", channel)
 
 	message := protocol.RpcRequestProtocol("123455", interfaceName, methodName, parameters,
 		paramTypes, returnTypes[0], false, "1.0.0", false)
+
+	log.Fatal("client send request to server: ", message)
 
 	err := channel.Write(message)
 	if err != nil {

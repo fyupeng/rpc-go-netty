@@ -20,6 +20,9 @@ type Protocol interface {
 type RequestProtocol interface {
 	Protocol
 	GetRequestId() string
+	GetInterfaceName() string
+	GetMethodName() string
+	GetParameters() []interface{}
 	GetHeartBeat() bool
 }
 
@@ -29,4 +32,7 @@ type RequestProtocol interface {
 */
 type ResponseProtocol interface {
 	Protocol
+	Ok(requestId, message string) Protocol
+	Success(requestId string, data interface{}) Protocol
+	SuccessWithCheckCode(requestId string, data interface{}, checkCode []byte) Protocol
 }

@@ -28,7 +28,7 @@ func (loadBalancer *roundRobinLoadBalancer) SelectService(services interface{}) 
 
 	//if len(services) == 0 {
 	//	var empty interface{}
-	//	return empty, errors.New("loadBalancer can't discover service!")
+	//	return empty, errors.New("loadBalancer can't discover cn.fyupeng.service!")
 	//}
 	//return services[rand.Int()], nil
 	loadBalancer.Index += 1
@@ -37,7 +37,7 @@ func (loadBalancer *roundRobinLoadBalancer) SelectService(services interface{}) 
 
 func (loadBalancer *roundRobinLoadBalancer) SelectNode(nodes []string) (string, error) {
 	if len(nodes) == 0 {
-		return "", errors.New("loadBalancer can't discover service!")
+		return "", errors.New("loadBalancer can't discover cn.fyupeng.service!")
 	}
 	loadBalancer.Index += 1
 	return nodes[loadBalancer.Index%len(nodes)], nil

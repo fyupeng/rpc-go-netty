@@ -1,4 +1,4 @@
-package server
+package handler
 
 import (
 	"errors"
@@ -9,12 +9,17 @@ import (
 	"sync/atomic"
 )
 
-func NewServerHandler() netty.ChannelHandler {
-	return &serverHandler{}
+func NewServerHandler(services map[string]interface{}) netty.ChannelHandler {
+	return &serverHandler{
+		requestHandler: NewRequestHandler(),
+		services:       services,
+	}
 }
 
 type serverHandler struct {
-	idleEvent int32
+	idleEvent      int32
+	requestHandler InvocationHandler
+	services       map[string]interface{}
 }
 
 func (h *serverHandler) HandleActive(ctx netty.ActiveContext) {
@@ -24,8 +29,6 @@ func (h *serverHandler) HandleActive(ctx netty.ActiveContext) {
 
 func (h *serverHandler) HandleWrite(ctx netty.OutboundContext, message netty.Message) {
 	//TODO implement me
-	fmt.Println("HandleWrite")
-	fmt.Println("服务端触发写操作：这是写操作信息： ", message)
 	//ctx.Write(message)
 	ctx.HandleWrite(message)
 }
@@ -44,14 +47,28 @@ func (h *serverHandler) HandleRead(ctx netty.InboundContext, message netty.Messa
 		log.Println("server receive heartBeat packets")
 		return
 	}
-	fmt.Println("服务端读到客户端消息： ", message)
+	log.Println("server receive request message: ", message)
+
+	request := message.(protocol.RequestProtocol)
+
+	requestId := request.GetRequestId()
+	interfaceName := request.GetInterfaceName()
+	methodName := request.GetMethodName()
+	parameters := request.GetParameters()
+
+	handler := h.requestHandler
+
+	result := handler.Handle(h.GetService(interfaceName), methodName, parameters)
+
+	response := protocol.NewRpcResponseProtocol().SuccessWithCheckCode(requestId, result, []byte{1, 2, 3, 4, 5})
 
 	// 示例：发送响应消息
 	//response := "Hello, Client!"
 	//parameters := []interface{}{"hello，这里是go语言"}
 	//message = protocol.RpcRequestProtocol("123455", "helloService", "sayHello", parameters,
 	//	[]string{"java.lang.String"}, "java.lang.String", false, "1.0.0", false)
-	//ctx.Write(message)
+	log.Println("server send back response:", response)
+	ctx.Write(response)
 	// 最后一个处理器不用将消息交给下一个
 	//ctx.HandleRead(message)
 }
@@ -67,7 +84,7 @@ func (h *serverHandler) HandleEvent(ctx netty.EventContext, event netty.Event) {
 
 	switch event.(type) {
 	case netty.ReadIdleEvent:
-		fmt.Println("read idle event", " isActive: ", ctx.Channel().IsActive())
+		log.Println("read idle event", " isActive: ", ctx.Channel().IsActive())
 		if 2 == atomic.AddInt32(&h.idleEvent, 1) {
 			ctx.Channel().Close(errors.New("headrbeat packets hve not been received for a long time, server close the channel with client"))
 		}
@@ -75,4 +92,13 @@ func (h *serverHandler) HandleEvent(ctx netty.EventContext, event netty.Event) {
 	default:
 		panic(event)
 	}
+}
+
+func (h *serverHandler) GetService(serviceName string) (service interface{}) {
+	if service, ok := h.services[serviceName]; !ok {
+		log.Fatalf("Service[%v] Not Found!", serviceName)
+	} else {
+		return service
+	}
+	return
 }

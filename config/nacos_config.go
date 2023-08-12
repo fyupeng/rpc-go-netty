@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/go-netty/go-netty"
 	"github.com/go-netty/go-netty/codec/frame"
 	"github.com/nacos-group/nacos-sdk-go/clients"
@@ -92,8 +91,6 @@ func NewClientConfig(registryCenterAddress string, clientHandler netty.ChannelHa
 	if err != nil {
 		log.Fatal("new client config fatal: ", err)
 	}
-
-	fmt.Println(address)
 
 	clientConfig := createClientConfig()
 	serverConfigs := createServerConfig(address)
@@ -192,19 +189,11 @@ func (serviceConfig *serviceConfig) GetChannel(address string) netty.Channel {
 
 	channelKey := addrPort.String()
 
-	fmt.Println("channelKey: ", channelKey)
-
-	fmt.Println("channels: ", serviceConfig.Channels)
-
 	channel := serviceConfig.Channels[channelKey]
-
-	fmt.Println("channel: ", channel)
 
 	if channel != nil && channel.IsActive() {
 		return channel
 	}
-
-	fmt.Println("bootstrap: ", serviceConfig.ClientBootstrap)
 
 	ch, err := serviceConfig.ClientBootstrap.Connect(addrPort.String())
 
@@ -275,6 +264,7 @@ func (serviceConfig *serviceConfig) DeregisterAllInstance() (err error) {
 			Port:        uint64(serviceConfig.ServiceAddrPort.Port()),
 			ServiceName: serviceName,
 		})
+		delete(serviceConfig.ServiceNames, serviceName)
 	}
 	return
 }

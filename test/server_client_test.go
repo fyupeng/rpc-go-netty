@@ -2,31 +2,28 @@ package test
 
 import (
 	"fmt"
-	"github.com/go-netty/go-netty"
-	"github.com/go-netty/go-netty/codec/frame"
 	"log"
 	"reflect"
 	"rpc-go-netty/aop"
-	"rpc-go-netty/cn/fyupeng/service"
-	"rpc-go-netty/codec"
+	cn_fyupeng_service "rpc-go-netty/cn.fyupeng.service"
 	"rpc-go-netty/discovery/load_balancer"
 	"rpc-go-netty/discovery/service_discovery"
 	"rpc-go-netty/net/client"
 	"rpc-go-netty/net/server"
 	"rpc-go-netty/protocol"
+	"rpc-go-netty/serializer"
 	"testing"
 	"time"
 )
 
 func TestProxy(t *testing.T) {
-	h := aop.NewClientProxy(service_discovery.NewServiceConsumer(load_balancer.NewRandLoadBalancer(), "127.0.0.1:8848"))
-	h.Invoke(reflect.TypeOf((*service.HelloWorldService)(nil)), "sayHello", []interface{}{"这是go代理端"})
+	consumer := client.NewClient(load_balancer.NewRandLoadBalancer(), serializer.JsonSerializerCode, "127.0.0.1:8848")
+	h := aop.NewClientProxy(consumer)
+	h.Invoke(reflect.TypeOf((*cn_fyupeng_service.HelloWorldService)(nil)), "Haha", []interface{}{"这是go代理端"})
 }
 func TestClient(t *testing.T) {
 
-	serviceConsumer := service_discovery.NewServiceConsumer(load_balancer.NewRandLoadBalancer(), "127.0.0.1:8848")
-
-	fmt.Println(serviceConsumer)
+	serviceConsumer := service_discovery.NewServiceConsumer(load_balancer.NewRandLoadBalancer(), serializer.JsonSerializerCode, "127.0.0.1:8848")
 
 	//serviceAddr, getServiceErr := serviceConsumer.LookupService("TestService")
 	//
@@ -36,15 +33,13 @@ func TestClient(t *testing.T) {
 
 	serviceAddr, getServiceErr := serviceConsumer.LookupServiceWithGroupName("helloService", "1.0.0")
 
+	fmt.Println(serviceAddr)
+
 	if getServiceErr != nil {
 		log.Fatal("get Service Fatal: ", getServiceErr)
 	}
 
-	fmt.Println("serviceAddr is " + serviceAddr.String())
-
 	channel := serviceConsumer.GetChannel("127.0.0.1:9527")
-
-	fmt.Println("channel: ", channel)
 
 	parameters := []interface{}{"hello，这里是go语言"}
 
@@ -62,13 +57,15 @@ func TestClient(t *testing.T) {
 
 	//channel.Close(err) // 关闭连接
 
-	//clientProxy := proxy.NewRemoteClientProxy(service.MyService())
+	//clientProxy := proxy.NewRemoteClientProxy(cn.fyupeng.service.MyService())
 	//clientProxy.Invoke("Hello", nil)
 
 }
 
 func TestServer(t *testing.T) {
-	nacosServer := server.NewNacosServerStarter("127.0.0.1:9527", "127.0.0.1:8848")
+	nacosServer := server.NewNacosServerStarter("127.0.0.1:9527", "127.0.0.1:8848", serializer.JsonSerializerCode)
+
+	nacosServer.PublishService(&Student{}, &cn_fyupeng_service.HelloWorldServiceImpl{})
 
 	err := nacosServer.Start()
 
@@ -76,66 +73,4 @@ func TestServer(t *testing.T) {
 		log.Fatal("start nacosServer failed:", err)
 	}
 
-}
-
-func TestClient1(t *testing.T) {
-	// 子连接的流水线配置
-	var clientnitializer = func(channel netty.Channel) {
-		channel.Pipeline().
-			// 最大允许包长128字节，使用\n分割包, 丢弃分隔符
-			AddLast(frame.DelimiterCodec(1024, "$", true)).
-			//AddLast(frame.LengthFieldCodec(binary.BigEndian, 2048, 8, 2, 12, 0)).
-			AddLast(netty.ReadIdleHandler(time.Second*3), netty.WriteIdleHandler(time.Second*5)).
-			AddLast(codec.CommonCodec(0, 8, 1)).
-			AddLast(client.NewClientHandler())
-	}
-
-	channel, err1 := netty.NewBootstrap(netty.WithClientInitializer(clientnitializer)).Connect(":9527")
-	if err1 != nil {
-		log.Fatal("channel err: ", err1)
-		return
-	}
-
-	parameters := []interface{}{"hello, 服务端, this is go language"}
-
-	message := protocol.RpcRequestProtocol("123455", "helloService", "sayHello", parameters,
-		[]string{"java.lang.String"}, "java.lang.String", false, "1.0.1", false)
-
-	err := channel.Write(message)
-	if err != nil {
-		log.Fatal("channel1 err: ", err)
-	}
-
-	time.Sleep(time.Second * 120)
-
-}
-
-func TestServer1(t *testing.T) {
-
-	// 子连接的流水线配置
-	var childInitializer = func(channel netty.Channel) {
-		channel.Pipeline().
-			// 最大允许包长128字节，使用\n分割包, 丢弃分隔符
-			AddLast(frame.DelimiterCodec(1024, "$", true)).
-			AddLast(netty.ReadIdleHandler(time.Second * 30)).
-			AddLast(codec.CommonCodec(0, 8, 1)).
-			AddLast(server.NewServerHandler())
-	}
-
-	// ErrServerClosed is returned by the Server call Shutdown or Close.
-	//var ErrServerClosed = errors.New("netty: Server closed")
-
-	// 创建Bootstrap & 监听端口 & 接受连接
-	bs := netty.NewBootstrap(netty.WithChildInitializer(childInitializer))
-
-	//bs.Listen(":9527", tcp.WithOptions(tcpOptions)).Async(func(err error) {
-	//	if nil != err && ErrServerClosed != err {
-	//		t.Fatal(err)
-	//	}
-	//})
-	err := bs.Listen(":9527").Sync()
-	if err != nil {
-		log.Fatal("LISTEN ERR: ", err)
-	}
-	bs.Shutdown()
 }

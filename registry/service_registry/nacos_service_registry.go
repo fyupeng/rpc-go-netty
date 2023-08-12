@@ -1,23 +1,55 @@
 package service_registry
 
 import (
-	"github.com/go-netty/go-netty"
+	"log"
+	"reflect"
+	"rpc-go-netty/codec"
 	"rpc-go-netty/config"
+	"rpc-go-netty/net/handler"
+	"sync"
 )
 
 /*
 *
 服务提供者 实现 服务注册器接口（服务提供者拥有了服务注册的行为）
 */
-func NewServiceProvider(serviceAddress, registerAddress string, serverHandler netty.ChannelHandler, commonCodec netty.CodecHandler) ServiceRegistry {
+func NewServiceProvider(serviceAddress, registerAddress string, serializerCode int) ServiceRegistry {
+
+	services := make(map[string]interface{})
+
+	serverHandler := handler.NewServerHandler(services)
 
 	return &serviceProvider{
-		ServerConfig: config.NewServerConfig(serviceAddress, registerAddress, serverHandler, commonCodec),
+		ServerConfig:       config.NewServerConfig(serviceAddress, registerAddress, serverHandler, codec.CommonCodec(0, 8, serializerCode)),
+		Services:           services,
+		RegisteredServices: make(map[string]bool),
 	}
 }
 
 type serviceProvider struct {
-	ServerConfig config.Config
+	ServerConfig       config.Config
+	Services           map[string]interface{}
+	RegisteredServices map[string]bool
+	mutex              sync.Mutex
+}
+
+func (serviceProvider *serviceProvider) AddService(service interface{}, serviceName string) {
+	serviceProvider.mutex.Lock()
+
+	defer serviceProvider.mutex.Unlock()
+
+	if _, ok := serviceProvider.RegisteredServices[serviceName]; ok {
+		return
+	}
+
+	serviceProvider.RegisteredServices[serviceName] = true
+
+	serviceProvider.Services[serviceName] = service
+
+	serviceValue := reflect.ValueOf(service)
+
+	log.Printf("Register cn.fyupeng.service: %v with interface %v", serviceValue, serviceName)
+
 }
 
 func (serviceProvider *serviceProvider) Listen() (err error) {

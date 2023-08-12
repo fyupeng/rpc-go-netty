@@ -1,11 +1,21 @@
 package test
 
+import "fmt"
+
 type Student struct {
 	Name string
 	Age  int
 	Sex  bool
 }
 
-func (Student) JavaClassName() string {
-	return "test.Student"
+func (stu Student) JavaClassName() string {
+	return "cn.fyupeng.service.Student"
+}
+
+func (stu Student) AutoRegister() {
+
+}
+
+func (stu Student) SayHello(message string) {
+	fmt.Println("say hello: ", message)
 }
