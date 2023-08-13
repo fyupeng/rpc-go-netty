@@ -1,8 +1,8 @@
 ## RPC-GO-NETTY
 
-基于 go-netty和monkey，集成json2、hessian2的远程过程调用RPC框架。
+基于 go-netty 和 monkey，集成 json2、hessian2 的远程过程调用 RPC 框架。
 
-跨语言协议，支持 rpc-netty-framework Java框架双方调用。
+跨语言协议，支持 rpc-netty-framework Java 框架双方调用。
 
 
 ### 功能
@@ -13,4 +13,10 @@
 5. 负载均衡
 6. 协议编码
 7. AOP 动态代理
+
+### 附
+
+1.0.0 版本将于 2023/12/31 前完成更新发布，敬请期待！
+
+
 
