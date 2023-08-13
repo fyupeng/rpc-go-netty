@@ -6,20 +6,21 @@ import (
 	"github.com/go-netty/go-netty"
 	"log"
 	"rpc-go-netty/protocol"
+	"rpc-go-netty/provider/service_provider"
 	"sync/atomic"
 )
 
-func NewServerHandler(services map[string]interface{}) netty.ChannelHandler {
+func NewServerHandler(serviceProvider service_provider.ServiceProvider) netty.ChannelHandler {
 	return &serverHandler{
-		requestHandler: NewRequestHandler(),
-		services:       services,
+		requestHandler:  NewRequestHandler(),
+		serviceProvider: serviceProvider,
 	}
 }
 
 type serverHandler struct {
-	idleEvent      int32
-	requestHandler InvocationHandler
-	services       map[string]interface{}
+	idleEvent       int32
+	requestHandler  InvocationHandler
+	serviceProvider service_provider.ServiceProvider
 }
 
 func (h *serverHandler) HandleActive(ctx netty.ActiveContext) {
@@ -58,7 +59,7 @@ func (h *serverHandler) HandleRead(ctx netty.InboundContext, message netty.Messa
 
 	handler := h.requestHandler
 
-	result := handler.Handle(h.GetService(interfaceName), methodName, parameters)
+	result := handler.Handle(h.serviceProvider.GetService(interfaceName), methodName, parameters)
 
 	response := protocol.NewRpcResponseProtocol().SuccessWithCheckCode(requestId, result, []byte{1, 2, 3, 4, 5})
 
@@ -92,13 +93,4 @@ func (h *serverHandler) HandleEvent(ctx netty.EventContext, event netty.Event) {
 	default:
 		panic(event)
 	}
-}
-
-func (h *serverHandler) GetService(serviceName string) (service interface{}) {
-	if service, ok := h.services[serviceName]; !ok {
-		log.Fatalf("Service[%v] Not Found!", serviceName)
-	} else {
-		return service
-	}
-	return
 }

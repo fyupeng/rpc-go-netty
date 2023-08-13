@@ -8,8 +8,8 @@ import (
 	cn_fyupeng_service "rpc-go-netty/cn.fyupeng.service"
 	"rpc-go-netty/discovery/load_balancer"
 	"rpc-go-netty/discovery/service_discovery"
-	"rpc-go-netty/net/client"
-	"rpc-go-netty/net/server"
+	"rpc-go-netty/net/netty/client"
+	"rpc-go-netty/net/netty/server"
 	"rpc-go-netty/protocol"
 	"rpc-go-netty/serializer"
 	"testing"
@@ -17,8 +17,8 @@ import (
 )
 
 func TestProxy(t *testing.T) {
-	consumer := client.NewClient(load_balancer.NewRandLoadBalancer(), serializer.JsonSerializerCode, "127.0.0.1:8848")
-	h := aop.NewClientProxy(consumer)
+	client := client.NewNettyClient2Cluster(load_balancer.NewRandLoadBalancer(), serializer.JsonSerializerCode, "127.0.0.1:8848")
+	h := aop.NewClientProxy(client)
 	h.Invoke(reflect.TypeOf((*cn_fyupeng_service.HelloWorldService)(nil)), "Haha", []interface{}{"这是go代理端"})
 }
 func TestClient(t *testing.T) {
@@ -63,7 +63,7 @@ func TestClient(t *testing.T) {
 }
 
 func TestServer(t *testing.T) {
-	nacosServer := server.NewNacosServerStarter("127.0.0.1:9527", "127.0.0.1:8848", serializer.JsonSerializerCode)
+	nacosServer := server.NewNettyServer("127.0.0.1:9527", "127.0.0.1:8848", serializer.JsonSerializerCode)
 
 	nacosServer.PublishService(&Student{}, &cn_fyupeng_service.HelloWorldServiceImpl{})
 

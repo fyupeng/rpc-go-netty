@@ -23,11 +23,12 @@ func RegisterPoint(pointType reflect.Type) {
 		// 方法位置字符串 “报名.接受者.方法名”，用于匹配代理
 		methodLocation := fmt.Sprintf("%s.%s.%s", pkgPath, receiverName, method.Name)
 		var guard *monkey.PatchGuard
-		//func(*aop.Hello, string, string) string -> in []reflect.Value -> [*aop.Hello, string, string]
+		//func(*aop.Proxy, string, string) string -> in []reflect.Value -> [*aop.Proxy, string, string]
 		var proxy = func(in []reflect.Value) []reflect.Value {
 			guard.Unpatch()
 			defer guard.Restore()
 			receiver := in[0]
+			fmt.Println(receiver)
 			point := NewJoinPoint(receiver, in[1:], method)
 			defer finallyProcessed(point, methodLocation)
 			// 执行 前置处理

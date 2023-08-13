@@ -3,32 +3,40 @@ package server
 import (
 	"log"
 	"reflect"
+	"rpc-go-netty/net/handler"
+	"rpc-go-netty/provider/service_provider"
 	"rpc-go-netty/registry/service_registry"
 )
 
-func NewNacosServerStarter(serviceAddress, registerAddress string, serializerCode int) RpcServer {
+func NewNettyServer(serviceAddress, registerAddress string, serializerCode int) RpcServer {
 
-	serviceProvider := service_registry.NewServiceProvider(serviceAddress, registerAddress, serializerCode)
+	serviceProvider := service_provider.NewDefaultServiceProvider()
 
-	return &nacosServerStarter{
+	serverHandler := handler.NewServerHandler(serviceProvider)
+
+	serviceRegistry := service_registry.NewNacosServiceRegistry(serviceAddress, registerAddress, serverHandler, serializerCode)
+
+	return &nettyServerStarter{
 		serverAddress:   serviceAddress,
-		serviceRegistry: serviceProvider,
+		serviceRegistry: serviceRegistry,
+		serviceProvider: serviceProvider,
 	}
 
 }
 
-type nacosServerStarter struct {
+type nettyServerStarter struct {
 	serverAddress   string
 	serviceRegistry service_registry.ServiceRegistry
+	serviceProvider service_provider.ServiceProvider
 }
 
-func (server *nacosServerStarter) Start() (err error) {
+func (server *nettyServerStarter) Start() (err error) {
 	// 监听端口
 	err = server.serviceRegistry.Listen()
 	return
 }
 
-func (server *nacosServerStarter) PublishService(services ...interface{}) {
+func (server *nettyServerStarter) PublishService(services ...interface{}) {
 	for _, service := range services {
 		structType := reflect.TypeOf(service).Elem()
 
@@ -44,7 +52,7 @@ func (server *nacosServerStarter) PublishService(services ...interface{}) {
 			groupName = groupField.Tag.Get("annotation")
 		}
 
-		server.serviceRegistry.AddService(service, interfaceName)
+		server.serviceProvider.AddService(service, interfaceName)
 
 		err := server.serviceRegistry.RegisterWithGroupName(interfaceName, groupName)
 		if err != nil {

@@ -1,7 +1,6 @@
 package aop
 
 import (
-	"fmt"
 	"log"
 	"reflect"
 	"rpc-go-netty/discovery/service_discovery"
@@ -19,16 +18,16 @@ type Aspect struct {
 }
 
 func (a *Aspect) Before(point *JoinPoint) bool {
-	fmt.Println("before")
+	//fmt.Println("before")
 	return true
 }
 
 func (a *Aspect) After(point *JoinPoint) {
-	fmt.Println("after")
+	//fmt.Println("after")
 }
 
 func (a *Aspect) Finally(point *JoinPoint) {
-	fmt.Println("finally")
+	//fmt.Println("finally")
 }
 
 func (a *Aspect) GetAspectExpress() string {
@@ -93,7 +92,7 @@ func (proxy *clientProxy) Invoke(interfaceType reflect.Type, methodName string, 
 	message := protocol.RpcRequestProtocol("123455", interfaceName, methodName, parameters,
 		paramTypes, returnTypes[0], false, "1.0.0", false)
 
-	log.Fatal("client send request to server: ", message)
+	log.Println("client send request to server: ", message)
 
 	err := channel.Write(message)
 	if err != nil {
