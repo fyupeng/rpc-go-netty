@@ -17,9 +17,9 @@ import (
 )
 
 func TestProxy(t *testing.T) {
-	client := client.NewNettyClient2Cluster(load_balancer.NewRandLoadBalancer(), serializer.JsonSerializerCode, "127.0.0.1:8848")
+	client := client.NewNettyClient2Cluster(load_balancer.NewRandLoadBalancer(), serializer.CJsonSerializerCode, "127.0.0.1:8848")
 	h := aop.NewClientProxy(client)
-	h.Invoke(reflect.TypeOf((*cn_fyupeng_service.HelloWorldService)(nil)), "Haha", []interface{}{"这是go代理端"})
+	h.Invoke(reflect.TypeOf((*cn_fyupeng_service.HelloWorldService)(nil)), "SayHello", []interface{}{"这是go代理端"})
 }
 func TestClient(t *testing.T) {
 
@@ -31,7 +31,7 @@ func TestClient(t *testing.T) {
 	//	log.Fatal("get Service Fatal: ", getServiceErr)
 	//}
 
-	serviceAddr, getServiceErr := serviceConsumer.LookupServiceWithGroupName("helloService", "1.0.0")
+	serviceAddr, getServiceErr := serviceConsumer.LookupServiceWithGroupName("helloService", "1.0.1")
 
 	fmt.Println(serviceAddr)
 
@@ -44,7 +44,7 @@ func TestClient(t *testing.T) {
 	parameters := []interface{}{"hello，这里是go语言"}
 
 	message := protocol.RpcRequestProtocol("123455", "helloService", "sayHello", parameters,
-		[]string{"java.lang.String"}, "java.lang.String", false, "1.0.0", false)
+		[]string{"java.lang.String"}, "java.lang.String", false, "1.0.1", false)
 
 	err := channel.Write(message)
 	if err != nil {
@@ -63,9 +63,9 @@ func TestClient(t *testing.T) {
 }
 
 func TestServer(t *testing.T) {
-	nacosServer := server.NewNettyServer("127.0.0.1:9527", "127.0.0.1:8848", serializer.JsonSerializerCode)
+	nacosServer := server.NewNettyServer("192.168.232.33:9527", "127.0.0.1:8848", serializer.SJsonSerializerCode)
 
-	nacosServer.PublishService(&Student{}, &cn_fyupeng_service.HelloWorldServiceImpl{})
+	nacosServer.PublishService(&cn_fyupeng_service.HelloWorldServiceImpl{})
 
 	err := nacosServer.Start()
 

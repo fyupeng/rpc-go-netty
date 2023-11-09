@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"github.com/go-netty/go-netty"
 	"github.com/go-netty/go-netty/codec"
 	"github.com/go-netty/go-netty/utils"
@@ -92,6 +93,9 @@ func (codec *commonCodec) HandleWrite(ctx netty.OutboundContext, message netty.M
 
 	// 将协议头和数据部分拼接，形成最终的编码后的字节流
 	encodedData := append(protocolHeader, serializedDataBytes...)
+
+	fmt.Println(encodedData)
+
 	//encodedData = append(encodedData, '$')
 
 	ctx.HandleWrite(encodedData)
@@ -126,6 +130,9 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 
 	packageProtocol := getProtocolByCode(BytesToInt(readBuff))
 
+	fmt.Println("packageProtocol")
+	fmt.Println(packageProtocol)
+
 	utils.AssertIf(packageProtocol == nil, "Invalid package protocol type:%X", readBuff)
 
 	// 读取序列化协议（1字节）
@@ -159,6 +166,9 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 		log.Fatal("err: ", err)
 	}
 
+	log.Println("dataBytes")
+	log.Println(mes)
+
 	data, err1 := seria.Deserialize(dataBytes, packageProtocol)
 
 	if err1 != nil {
@@ -184,6 +194,12 @@ func GetSerializerByCode(serializationTypeCode int) (serial serializer.CommonSer
 		serial = serializer.NewJsonSerializer()
 	case serializer.HessianSerializerCode:
 		serial = serializer.NewHessianSerializer()
+	case serializer.FurySerializerCode:
+		serial = serializer.NewFurySerializer()
+	case serializer.CJsonSerializerCode:
+		serial = serializer.NewFJsonSerializer()
+	case serializer.SJsonSerializerCode:
+		serial = serializer.NewFJsonSerializer()
 	default:
 	}
 	return

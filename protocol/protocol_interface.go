@@ -23,7 +23,12 @@ type RequestProtocol interface {
 	GetInterfaceName() string
 	GetMethodName() string
 	GetParameters() []interface{}
+	GetParamTypes() []string
+	SetParamTypes(paramTypes []string)
 	GetHeartBeat() bool
+	GetReturnType() string
+	SetReturnType(returnType string)
+	SetMethodName(methodName string)
 }
 
 /*

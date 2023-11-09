@@ -21,6 +21,7 @@ func (h *clientHandler) HandleActive(ctx netty.ActiveContext) {
 
 func (h *clientHandler) HandleWrite(ctx netty.OutboundContext, message netty.Message) {
 	//TODO implement me
+	log.Println("client send request to server: ", message)
 	ctx.HandleWrite(message)
 }
 

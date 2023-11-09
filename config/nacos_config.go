@@ -84,7 +84,7 @@ type serviceConfig struct {
 	ClientBootstrap netty.Bootstrap
 }
 
-func NewClientConfig(registryCenterAddress string, clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler) Config {
+func NewClientConfig(registryCenterAddress string, clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler, protocolHandler netty.ChannelHandler) Config {
 
 	address, err := ParseAddress(registryCenterAddress)
 
@@ -108,7 +108,7 @@ func NewClientConfig(registryCenterAddress string, clientHandler netty.ChannelHa
 		ClientHandler:          clientHandler,
 		CommonCodec:            commonCodec,
 		Channels:               make(map[string]netty.Channel),
-		ClientBootstrap:        initClientBootstrap(clientHandler, commonCodec),
+		ClientBootstrap:        initClientBootstrap(clientHandler, commonCodec, protocolHandler),
 	}
 
 }
@@ -153,7 +153,7 @@ func initServerBootstrap(serverHandler netty.ChannelHandler, commonCodec netty.C
 		channel.Pipeline().
 			//AddLast(netty.ReadIdleHandler(time.Second * 3)).
 			//AddLast(netty.WriteIdleHandler(time.Second * 5)).
-			AddLast(frame.DelimiterCodec(1024, "$", true)).
+			AddLast(frame.DelimiterCodec(1024, "\r\n", true)).
 			AddLast(commonCodec).
 			AddLast(serverHandler)
 	}
@@ -162,15 +162,17 @@ func initServerBootstrap(serverHandler netty.ChannelHandler, commonCodec netty.C
 
 }
 
-func initClientBootstrap(clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler) netty.Bootstrap {
+func initClientBootstrap(clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler, protocolHandler netty.ChannelHandler) netty.Bootstrap {
 
 	clientInitializer := func(channel netty.Channel) {
 		channel.Pipeline().
 			//AddLast(netty.ReadIdleHandler(time.Second * 3)).
 			//AddLast(netty.WriteIdleHandler(time.Second * 5)).
-			AddLast(frame.DelimiterCodec(1024, "$", true)).
+			AddLast(frame.DelimiterCodec(1024, "\r\n", true)).
 			AddLast(commonCodec).
+			AddLast(protocolHandler).
 			AddLast(clientHandler)
+
 	}
 
 	return netty.NewBootstrap(netty.WithClientInitializer(clientInitializer))

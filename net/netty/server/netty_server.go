@@ -12,7 +12,7 @@ func NewNettyServer(serviceAddress, registerAddress string, serializerCode int) 
 
 	serviceProvider := service_provider.NewDefaultServiceProvider()
 
-	serverHandler := handler.NewServerHandler(serviceProvider)
+	serverHandler := handler.NewServerHandler(serviceProvider, serializerCode)
 
 	serviceRegistry := service_registry.NewNacosServiceRegistry(serviceAddress, registerAddress, serverHandler, serializerCode)
 

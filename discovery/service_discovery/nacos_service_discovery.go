@@ -19,7 +19,7 @@ import (
 func NewServiceConsumer(loadBalancer load_balancer.LoadBalancer, serializerCode int, registryCenterAddress string) ServiceDiscovery {
 
 	return &serviceConsumer{
-		ClientConfig: config.NewClientConfig(registryCenterAddress, handler.NewClientHandler(), codec.CommonCodec(0, 8, serializerCode)),
+		ClientConfig: config.NewClientConfig(registryCenterAddress, handler.NewClientHandler(), codec.CommonCodec(0, 8, serializerCode), handler.NewProtocolHandler(serializerCode)),
 		LoadBalancer: loadBalancer,
 	}
 }

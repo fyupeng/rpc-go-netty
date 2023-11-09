@@ -23,6 +23,10 @@ func NewRpcRequestProtocol() RequestProtocol {
 	return &rpcRequestProtocol{}
 }
 
+//func (proto *rpcRequestProtocol) JavaClassName() string {
+//	return "cn.fyupeng.protocol.RpcRequest"
+//}
+
 func (rpcRequestProtocol *rpcRequestProtocol) GetRequestId() string {
 	return rpcRequestProtocol.RequestId
 }
@@ -36,12 +40,34 @@ func (rpcRequestProtocol *rpcRequestProtocol) GetMethodName() string {
 	return rpcRequestProtocol.MethodName
 }
 
+func (rpcRequestProtocol *rpcRequestProtocol) SetMethodName(methodName string) {
+	rpcRequestProtocol.MethodName = methodName
+}
+
 func (rpcRequestProtocol *rpcRequestProtocol) GetParameters() []interface{} {
 	return rpcRequestProtocol.Parameters
 }
 
+func (rpcRequestProtocol *rpcRequestProtocol) GetParamTypes() []string {
+	return rpcRequestProtocol.ParamTypes
+}
+
+func (rpcRequestProtocol *rpcRequestProtocol) SetParamTypes(paramTypes []string) {
+	//TODO implement me
+	rpcRequestProtocol.ParamTypes = paramTypes
+}
+
 func (rpcRequestProtocol *rpcRequestProtocol) GetHeartBeat() bool {
 	return rpcRequestProtocol.HeartBeat
+}
+
+func (rpcRequestProtocol *rpcRequestProtocol) GetReturnType() string {
+	return rpcRequestProtocol.ReturnType
+}
+
+func (rpcRequestProtocol *rpcRequestProtocol) SetReturnType(returnType string) {
+	//TODO implement me
+	rpcRequestProtocol.ReturnType = returnType
 }
 
 type rpcRequestProtocol struct {
@@ -74,6 +100,10 @@ func NewRpcResponseProtocol() ResponseProtocol {
 	return &rpcResponseProtocol{}
 }
 
+//func (proto rpcResponseProtocol) JavaClassName() string {
+//	return "cn.fyupeng.protocol.RpcResponse"
+//}
+
 func (proto rpcResponseProtocol) Ok(requestId, message string) Protocol {
 	proto.RequestId = requestId
 	proto.Message = message
@@ -99,9 +129,9 @@ func (proto rpcResponseProtocol) SuccessWithCheckCode(requestId string, data int
 }
 
 type rpcResponseProtocol struct {
-	RequestId  string      `json:"requestId"`
-	CheckCode  []byte      `json:"checkCode"`
-	StatusCode int         `json:"statusCode"`
-	Message    string      `json:"message"`
-	Data       interface{} `json:"data"`
+	RequestId  string      `json:"requestId" hessian:"requestId"`
+	CheckCode  []byte      `json:"checkCode" hessian:"checkCode"`
+	StatusCode int         `json:"statusCode" hessian:"statusCode"`
+	Message    string      `json:"message" hessian:"message"`
+	Data       interface{} `json:"data" hessian:"data"`
 }

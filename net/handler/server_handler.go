@@ -10,10 +10,11 @@ import (
 	"sync/atomic"
 )
 
-func NewServerHandler(serviceProvider service_provider.ServiceProvider) netty.ChannelHandler {
+func NewServerHandler(serviceProvider service_provider.ServiceProvider, serializerCode int) netty.ChannelHandler {
 	return &serverHandler{
 		requestHandler:  NewRequestHandler(),
 		serviceProvider: serviceProvider,
+		serializerCode:  serializerCode,
 	}
 }
 
@@ -21,6 +22,7 @@ type serverHandler struct {
 	idleEvent       int32
 	requestHandler  InvocationHandler
 	serviceProvider service_provider.ServiceProvider
+	serializerCode  int
 }
 
 func (h *serverHandler) HandleActive(ctx netty.ActiveContext) {
