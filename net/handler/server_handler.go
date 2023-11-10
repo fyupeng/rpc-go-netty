@@ -61,6 +61,13 @@ func (h *serverHandler) HandleRead(ctx netty.InboundContext, message netty.Messa
 
 	handler := h.requestHandler
 
+	fmt.Println("interfaceName")
+	fmt.Println(interfaceName)
+	fmt.Println("methodName")
+	fmt.Println(methodName)
+	fmt.Println("parameters")
+	fmt.Println(parameters)
+
 	result := handler.Handle(h.serviceProvider.GetService(interfaceName), methodName, parameters)
 
 	response := protocol.NewRpcResponseProtocol().SuccessWithCheckCode(requestId, result, []byte{1, 2, 3, 4, 5})

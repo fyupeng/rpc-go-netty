@@ -9,47 +9,47 @@ import (
 	"rpc-go-netty/serializer"
 )
 
-func NewProtocolHandler(serializerCode int) netty.ChannelHandler {
-	return &protocolHandler{
+func NewRequestParser(serializerCode int) netty.ChannelHandler {
+	return &requestParser{
 		serializerCode: serializerCode,
 	}
 }
 
-type protocolHandler struct {
+type requestParser struct {
 	idleEvent      int32
 	serializerCode int // 序列化类型
 }
 
-func (h *protocolHandler) HandleActive(ctx netty.ActiveContext) {
+func (h *requestParser) HandleActive(ctx netty.ActiveContext) {
 	//TODO implement me
 	ctx.HandleActive()
 }
 
-func (h *protocolHandler) HandleWrite(ctx netty.OutboundContext, message netty.Message) {
+func (req *requestParser) HandleWrite(ctx netty.OutboundContext, message netty.Message) {
 	//TODO implement me
 	log.Println("prepare for golang protocol transfer to java:: ", message)
 
-	p := message.(protocol.RequestProtocol)
-	p.SetParamTypes(adaptParamTypes(h.serializerCode, p.GetParamTypes()))
-	p.SetReturnType(adaptReturnTypes(h.serializerCode, p.GetReturnType()))
-	p.SetMethodName(adaptJavaMethodName(h.serializerCode, p.GetMethodName()))
+	request := message.(protocol.RequestProtocol)
+	request.SetParamTypes(adaptParamTypes(req.serializerCode, request.GetParamTypes()))
+	request.SetReturnType(adaptReturnTypes(req.serializerCode, request.GetReturnType()))
+	request.SetMethodName(adaptJavaMethodName(req.serializerCode, request.GetMethodName()))
 
 	ctx.HandleWrite(message)
 }
 
-func (h *protocolHandler) HandleInactive(ctx netty.InactiveContext, ex netty.Exception) {
+func (req *requestParser) HandleInactive(ctx netty.InactiveContext, ex netty.Exception) {
 	//TODO implement me
 	ctx.HandleInactive(ex)
 }
 
-func (h *protocolHandler) HandleRead(ctx netty.InboundContext, message netty.Message) {
+func (req *requestParser) HandleRead(ctx netty.InboundContext, message netty.Message) {
 
 	log.Println("protocolHandler receive message from server: ", message)
 
 	ctx.HandleRead(message)
 }
 
-func (h *protocolHandler) HandleException(ctx netty.ExceptionContext, ex netty.Exception) {
+func (req *requestParser) HandleException(ctx netty.ExceptionContext, ex netty.Exception) {
 	// 处理异常情况
 	log.Println("Exception caught:", ex)
 	//ctx.HandleException(ex)

@@ -4,6 +4,7 @@ import (
 	"github.com/go-netty/go-netty"
 	"rpc-go-netty/codec"
 	"rpc-go-netty/config"
+	"rpc-go-netty/net/handler"
 )
 
 /*
@@ -15,16 +16,18 @@ func NewNacosServiceRegistry(serviceAddress, registerAddress string, serverHandl
 	return &nacosServiceRegistry{
 		ServerConfig:       config.NewServerConfig(serviceAddress, registerAddress, serverHandler, codec.CommonCodec(0, 8, serializerCode)),
 		RegisteredServices: make(map[string]bool),
+		serializerCode:     serializerCode,
 	}
 }
 
 type nacosServiceRegistry struct {
 	ServerConfig       config.Config
 	RegisteredServices map[string]bool
+	serializerCode     int
 }
 
 func (serviceProvider *nacosServiceRegistry) Listen() (err error) {
-	err = serviceProvider.ServerConfig.Listen()
+	err = serviceProvider.ServerConfig.Listen(handler.NewResponseParser(serviceProvider.serializerCode))
 	return
 }
 

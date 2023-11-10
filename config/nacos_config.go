@@ -18,7 +18,7 @@ import (
 type Config interface {
 	GetChannel(address string) netty.Channel
 
-	Listen() error
+	Listen(responseParser netty.ChannelHandler) error
 
 	GetAllInstance(serviceName string) ([]model.Instance, error)
 
@@ -84,7 +84,7 @@ type serviceConfig struct {
 	ClientBootstrap netty.Bootstrap
 }
 
-func NewClientConfig(registryCenterAddress string, clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler, protocolHandler netty.ChannelHandler) Config {
+func NewClientConfig(registryCenterAddress string, clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler, requestParser netty.ChannelHandler) Config {
 
 	address, err := ParseAddress(registryCenterAddress)
 
@@ -108,7 +108,7 @@ func NewClientConfig(registryCenterAddress string, clientHandler netty.ChannelHa
 		ClientHandler:          clientHandler,
 		CommonCodec:            commonCodec,
 		Channels:               make(map[string]netty.Channel),
-		ClientBootstrap:        initClientBootstrap(clientHandler, commonCodec, protocolHandler),
+		ClientBootstrap:        initClientBootstrap(clientHandler, commonCodec, requestParser),
 	}
 
 }
@@ -139,22 +139,23 @@ func createServerConfig(address netip.AddrPort) []constant.ServerConfig {
 	return serverConfigs
 }
 
-func (serviceConfig *serviceConfig) Listen() (err error) {
+func (serviceConfig *serviceConfig) Listen(responseParser netty.ChannelHandler) (err error) {
 	// 监听端口
-	bootstrap := initServerBootstrap(serviceConfig.ServerHandler, serviceConfig.CommonCodec)
+	bootstrap := initServerBootstrap(serviceConfig.ServerHandler, serviceConfig.CommonCodec, responseParser)
 	listener := bootstrap.Listen(serviceConfig.ServiceAddrPort.String())
 	log.Println("listening port... [" + serviceConfig.ServiceAddrPort.String() + "]")
 	err = listener.Sync()
 	return
 }
 
-func initServerBootstrap(serverHandler netty.ChannelHandler, commonCodec netty.CodecHandler) netty.Bootstrap {
+func initServerBootstrap(serverHandler netty.ChannelHandler, commonCodec netty.CodecHandler, responseParser netty.ChannelHandler) netty.Bootstrap {
 	var childInitializer = func(channel netty.Channel) {
 		channel.Pipeline().
 			//AddLast(netty.ReadIdleHandler(time.Second * 3)).
 			//AddLast(netty.WriteIdleHandler(time.Second * 5)).
 			AddLast(frame.DelimiterCodec(1024, "\r\n", true)).
 			AddLast(commonCodec).
+			AddLast(responseParser).
 			AddLast(serverHandler)
 	}
 
@@ -162,7 +163,7 @@ func initServerBootstrap(serverHandler netty.ChannelHandler, commonCodec netty.C
 
 }
 
-func initClientBootstrap(clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler, protocolHandler netty.ChannelHandler) netty.Bootstrap {
+func initClientBootstrap(clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler, requestParser netty.ChannelHandler) netty.Bootstrap {
 
 	clientInitializer := func(channel netty.Channel) {
 		channel.Pipeline().
@@ -170,7 +171,7 @@ func initClientBootstrap(clientHandler netty.ChannelHandler, commonCodec netty.C
 			//AddLast(netty.WriteIdleHandler(time.Second * 5)).
 			AddLast(frame.DelimiterCodec(1024, "\r\n", true)).
 			AddLast(commonCodec).
-			AddLast(protocolHandler).
+			AddLast(requestParser).
 			AddLast(clientHandler)
 
 	}
