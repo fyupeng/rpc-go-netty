@@ -77,6 +77,8 @@ func (proxy *clientProxy) Invoke(interfaceType reflect.Type, methodName string, 
 		returnTypes[i] = methodType.Out(i).String()
 	}
 
+	// 封装成sendRequest
+
 	serviceAddr, getServiceErr := proxy.ServiceConsumer.LookupServiceWithGroupName(interfaceName, "1.0.1")
 
 	if getServiceErr != nil {

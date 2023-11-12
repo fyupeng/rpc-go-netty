@@ -27,7 +27,7 @@ func (h *requestParser) HandleActive(ctx netty.ActiveContext) {
 
 func (req *requestParser) HandleWrite(ctx netty.OutboundContext, message netty.Message) {
 	//TODO implement me
-	log.Println("prepare for golang protocol transfer to java:: ", message)
+	log.Println("prepare request for golang protocol transfer to java:: ", message)
 
 	request := message.(protocol.RequestProtocol)
 	request.SetParamTypes(adaptParamTypes(req.serializerCode, request.GetParamTypes()))
@@ -92,7 +92,7 @@ func adaptReturnTypes(serializerCode int, returnType string) string {
 		}
 		return adaptReturnType
 	} else {
-		return adaptReturnType
+		return returnType
 	}
 
 }

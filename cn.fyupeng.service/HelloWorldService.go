@@ -10,5 +10,5 @@ type HelloWorldServiceImpl struct {
 }
 
 func (helloService *HelloWorldServiceImpl) SayHello(message string) string {
-	return "I say: " + message
+	return "GoLang say: I have receive your message: " + message
 }

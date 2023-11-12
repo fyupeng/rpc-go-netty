@@ -3,6 +3,7 @@ package test
 import (
 	"fmt"
 	"reflect"
+	"rpc-go-netty/protocol"
 	"testing"
 )
 
@@ -87,4 +88,25 @@ func TestInterfaceService(t *testing.T) {
 			fmt.Printf("Implements interface: %s\n", field.Type.Name())
 		}
 	}
+}
+
+func TestSetGet(t *testing.T) {
+	response := protocol.NewRpcResponseProtocol().SuccessWithCheckCode("123113", "12313", "string", "")
+
+	res := response.(protocol.ResponseProtocol)
+
+	fmt.Println(res)
+
+	data := res.GetData()
+	fmt.Println(data)
+
+	newData := "1111111111"
+
+	res.SetData(newData)
+	target := res.GetData()
+	fmt.Println(target)
+
+	fmt.Println(response)
+
+	fmt.Println(res)
 }

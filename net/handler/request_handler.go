@@ -27,7 +27,7 @@ func (handle *requestHandler) Handle(service interface{}, methodName string, arg
 	interfaceValue := reflect.New(serviceType).Elem()
 
 	// 调用函数
-	var result interface{}
+	var result []reflect.Value
 	if len(args) == 1 {
 		result = method.Func.Call([]reflect.Value{interfaceValue, reflect.ValueOf(args[0])})
 	} else {
@@ -39,12 +39,11 @@ func (handle *requestHandler) Handle(service interface{}, methodName string, arg
 	resultVal := reflect.ValueOf(result)
 
 	if resultVal.Kind() != reflect.Slice {
-		// go/java 直接返回
-		return result
+		// go/java 返回首个 具体数据类型数据
+		return result[0].Interface()
 	} else if resultVal.Len() > 0 {
-		// java 模式，有多个返回值默认返回一个
-
-		// go 模式 直接返回
+		return result[0].Interface()
+	} else {
 		return result
 	}
 

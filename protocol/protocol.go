@@ -23,10 +23,6 @@ func NewRpcRequestProtocol() RequestProtocol {
 	return &rpcRequestProtocol{}
 }
 
-//func (proto *rpcRequestProtocol) JavaClassName() string {
-//	return "cn.fyupeng.protocol.RpcRequest"
-//}
-
 func (rpcRequestProtocol *rpcRequestProtocol) GetRequestId() string {
 	return rpcRequestProtocol.RequestId
 }
@@ -86,7 +82,7 @@ type rpcRequestProtocol struct {
 *
 RPC 响应协议
 */
-func RpcResponseProtocol(requestId string, checkCode []byte, statusCode int, message string, data interface{}) ResponseProtocol {
+func RpcResponseProtocol(requestId string, checkCode string, statusCode int, message string, data interface{}) *rpcResponseProtocol {
 	return &rpcResponseProtocol{
 		RequestId:  requestId,
 		CheckCode:  checkCode,
@@ -100,38 +96,60 @@ func NewRpcResponseProtocol() ResponseProtocol {
 	return &rpcResponseProtocol{}
 }
 
-//func (proto rpcResponseProtocol) JavaClassName() string {
-//	return "cn.fyupeng.protocol.RpcResponse"
-//}
-
-func (proto rpcResponseProtocol) Ok(requestId, message string) Protocol {
-	proto.RequestId = requestId
-	proto.Message = message
-	proto.StatusCode = 200
-	return proto
+func (rpcResponseProtocol *rpcResponseProtocol) Ok(requestId, message string) Protocol {
+	rpcResponseProtocol.RequestId = requestId
+	rpcResponseProtocol.Message = message
+	rpcResponseProtocol.StatusCode = 200
+	return rpcResponseProtocol
 }
 
-func (proto rpcResponseProtocol) Success(requestId string, data interface{}) Protocol {
-	proto.RequestId = requestId
-	proto.Message = "ok"
-	proto.StatusCode = 200
-	proto.Data = data
-	return proto
+func (rpcResponseProtocol *rpcResponseProtocol) Success(requestId string, data interface{}) Protocol {
+	rpcResponseProtocol.RequestId = requestId
+	rpcResponseProtocol.Message = "ok"
+	rpcResponseProtocol.StatusCode = 200
+	rpcResponseProtocol.Data = data
+	return rpcResponseProtocol
 }
 
-func (proto rpcResponseProtocol) SuccessWithCheckCode(requestId string, data interface{}, checkCode []byte) Protocol {
-	proto.RequestId = requestId
-	proto.Message = "ok"
-	proto.StatusCode = 200
-	proto.Data = data
-	proto.CheckCode = checkCode
-	return proto
+func (rpcResponseProtocol *rpcResponseProtocol) SuccessWithCheckCode(requestId string, data interface{}, dataType string, checkCode string) Protocol {
+	rpcResponseProtocol.RequestId = requestId
+	rpcResponseProtocol.Message = "ok"
+	rpcResponseProtocol.StatusCode = 200
+	rpcResponseProtocol.Data = data
+	rpcResponseProtocol.DataType = dataType
+	rpcResponseProtocol.CheckCode = checkCode
+	return rpcResponseProtocol
+}
+
+func (rpcResponseProtocol *rpcResponseProtocol) GetData() interface{} {
+	return rpcResponseProtocol.Data
+}
+
+func (rpcResponseProtocol *rpcResponseProtocol) SetData(data interface{}) {
+	rpcResponseProtocol.Data = data
+}
+
+func (rpcResponseProtocol *rpcResponseProtocol) GetCheckCode() string {
+	return rpcResponseProtocol.CheckCode
+}
+
+func (rpcResponseProtocol *rpcResponseProtocol) SetCheckCode(checkCode string) {
+	rpcResponseProtocol.CheckCode = checkCode
+}
+
+func (rpcResponseProtocol *rpcResponseProtocol) GetDataType() string {
+	return rpcResponseProtocol.DataType
+}
+
+func (rpcResponseProtocol *rpcResponseProtocol) SetDataType(dataType string) {
+	rpcResponseProtocol.DataType = dataType
 }
 
 type rpcResponseProtocol struct {
 	RequestId  string      `json:"requestId" hessian:"requestId"`
-	CheckCode  []byte      `json:"checkCode" hessian:"checkCode"`
+	CheckCode  string      `json:"checkCode" hessian:"checkCode"`
 	StatusCode int         `json:"statusCode" hessian:"statusCode"`
 	Message    string      `json:"message" hessian:"message"`
 	Data       interface{} `json:"data" hessian:"data"`
+	DataType   string      `json:"dataType" hessian:"dataType"`
 }

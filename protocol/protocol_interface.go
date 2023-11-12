@@ -22,13 +22,13 @@ type RequestProtocol interface {
 	GetRequestId() string
 	GetInterfaceName() string
 	GetMethodName() string
+	SetMethodName(methodName string)
 	GetParameters() []interface{}
 	GetParamTypes() []string
 	SetParamTypes(paramTypes []string)
 	GetHeartBeat() bool
 	GetReturnType() string
 	SetReturnType(returnType string)
-	SetMethodName(methodName string)
 }
 
 /*
@@ -39,5 +39,12 @@ type ResponseProtocol interface {
 	Protocol
 	Ok(requestId, message string) Protocol
 	Success(requestId string, data interface{}) Protocol
-	SuccessWithCheckCode(requestId string, data interface{}, checkCode []byte) Protocol
+	SuccessWithCheckCode(requestId string, data interface{}, dataType string, checkCode string) Protocol
+
+	GetData() interface{}
+	SetData(data interface{})
+	GetCheckCode() string
+	SetCheckCode(checkCode string)
+	GetDataType() string
+	SetDataType(dataType string)
 }

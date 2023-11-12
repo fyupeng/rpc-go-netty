@@ -126,7 +126,7 @@ func getProtocolByCode(protocolCode int) (proto protocol.Protocol) {
 func TestProtocolDeserialized(t *testing.T) {
 	//proto := protocol.RpcRequestProtocol("123455", "HelloService", "sayHello", []interface{}{"arg0", "arg1"},
 	//	[]string{"string", "string"}, "string", false, "1.0.1", false)
-	proto := protocol.RpcResponseProtocol("123455", []byte{1, 2, 3, 51, 2}, 200, "测试消息", "这是服务端消息")
+	proto := protocol.RpcResponseProtocol("123455", "VYGThW0MXPf4v88IKP/o4g==", 200, "测试消息", "这是服务端消息")
 	protocolBinary, err := json.Marshal(proto)
 	if err != nil {
 		log.Fatal("序列化失败！", err)
@@ -141,4 +141,8 @@ func TestProtocolDeserialized(t *testing.T) {
 		log.Fatal("反序列化失败", err)
 	}
 	fmt.Println("反序列化成功：", message)
+}
+
+func TestNullDataDeserialzed(t *testing.T) {
+
 }

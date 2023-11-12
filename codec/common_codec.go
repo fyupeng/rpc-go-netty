@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"github.com/go-netty/go-netty"
 	"github.com/go-netty/go-netty/codec"
 	"github.com/go-netty/go-netty/utils"
@@ -94,8 +93,6 @@ func (codec *commonCodec) HandleWrite(ctx netty.OutboundContext, message netty.M
 	// 将协议头和数据部分拼接，形成最终的编码后的字节流
 	encodedData := append(protocolHeader, serializedDataBytes...)
 
-	fmt.Println(encodedData)
-
 	//encodedData = append(encodedData, '$')
 
 	ctx.HandleWrite(encodedData)
@@ -129,9 +126,6 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 	}
 
 	packageProtocol := getProtocolByCode(BytesToInt(readBuff))
-
-	fmt.Println("packageProtocol")
-	fmt.Println(packageProtocol)
 
 	utils.AssertIf(packageProtocol == nil, "Invalid package protocol type:%X", readBuff)
 
