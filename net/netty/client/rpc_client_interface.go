@@ -1,5 +1,5 @@
 package client
 
 type RpcClient interface {
-	Start()
+	SendRequest(interfaceName string, methodName string, parameters []interface{}, paramTypes []string, returnTypes []string)
 }

@@ -1,10 +1,8 @@
 package aop
 
 import (
-	"log"
 	"reflect"
-	"rpc-go-netty/discovery/service_discovery"
-	"rpc-go-netty/protocol"
+	"rpc-go-netty/net/netty/client"
 	"strings"
 	"time"
 )
@@ -38,14 +36,14 @@ type Proxy interface {
 	Invoke(interfaceType reflect.Type, methodName string, parameters []interface{})
 }
 
-func NewClientProxy(serviceConsumer service_discovery.ServiceDiscovery) Proxy {
+func NewClientProxy(nettyClient client.RpcClient) Proxy {
 	return &clientProxy{
-		ServiceConsumer: serviceConsumer,
+		nettyClient: nettyClient,
 	}
 }
 
 type clientProxy struct {
-	ServiceConsumer service_discovery.ServiceDiscovery
+	nettyClient client.RpcClient
 }
 
 func (proxy *clientProxy) Invoke(interfaceType reflect.Type, methodName string, parameters []interface{}) {
@@ -79,33 +77,19 @@ func (proxy *clientProxy) Invoke(interfaceType reflect.Type, methodName string, 
 
 	// 封装成sendRequest
 
-	serviceAddr, getServiceErr := proxy.ServiceConsumer.LookupServiceWithGroupName(interfaceName, "1.0.1")
-
-	if getServiceErr != nil {
-		log.Fatal("get Service Fatal: ", getServiceErr)
-	}
-
-	channel := proxy.ServiceConsumer.GetChannel(serviceAddr.String())
-
-	message := protocol.RpcRequestProtocol("123455", interfaceName, methodName, parameters,
-		paramTypes, returnTypes[0], false, "1.0.1", false)
-
-	err := channel.Write(message)
-	if err != nil {
-		log.Fatal("channel1 err: ", err)
-	}
+	proxy.nettyClient.SendRequest(interfaceName, methodName, parameters, paramTypes, returnTypes)
 
 	time.Sleep(time.Second * 100)
 
 }
 
-func getServiceName(pkgPath string, reveiverName string) string {
+func getServiceName(pkgPath string, receiverName string) string {
 	pkgs := strings.Split(pkgPath, "/")
 	var serviceName string
 	for i := 1; i < len(pkgs); i++ {
 		serviceName += pkgs[i] + "."
 	}
-	return serviceName + reveiverName
+	return serviceName + receiverName
 }
 
 func getInterfaceMethod(interfaceType reflect.Type, methodName string) reflect.Method {

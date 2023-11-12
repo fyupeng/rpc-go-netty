@@ -33,10 +33,10 @@ type Config interface {
 	DeregisterAllInstanceWithGroupName(groupName string) (err error)
 }
 
-func NewServerConfig(serviceAddress, registryServerAddress string, serverHandler netty.ChannelHandler, commonCodec netty.CodecHandler) Config {
+func NewServerConfig(serviceAddress string, registryServerAddress []string, serverHandler netty.ChannelHandler, commonCodec netty.CodecHandler) Config {
 
 	serviceAddrPort, err := ParseAddress(serviceAddress)
-	registryServerAddrPort, err := ParseAddress(registryServerAddress)
+	registryServerAddrPort, err := ParseAddress4Array(registryServerAddress)
 
 	if err != nil {
 		log.Fatal("new client config fatal: ", err)
@@ -65,7 +65,7 @@ func NewServerConfig(serviceAddress, registryServerAddress string, serverHandler
 // 创建RPC客户端和服务端服务配置
 type serviceConfig struct {
 	// 注册中心服务地址
-	RegistryServerAddrPort netip.AddrPort
+	RegistryServerAddrPort []netip.AddrPort
 	// 服务提供地址
 	ServiceAddrPort netip.AddrPort
 	// 服务名
@@ -84,16 +84,16 @@ type serviceConfig struct {
 	ClientBootstrap netty.Bootstrap
 }
 
-func NewClientConfig(registryCenterAddress string, clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler, requestParser netty.ChannelHandler) Config {
+func NewClientConfig(registryCenterAddress []string, clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler, requestParser netty.ChannelHandler) Config {
 
-	address, err := ParseAddress(registryCenterAddress)
+	addressArray, err := ParseAddress4Array(registryCenterAddress)
 
 	if err != nil {
 		log.Fatal("new client config fatal: ", err)
 	}
 
 	clientConfig := createClientConfig()
-	serverConfigs := createServerConfig(address)
+	serverConfigs := createServerConfig(addressArray)
 	// 创建服务发现客户端的另一种方式 (推荐)
 	namingClient, err := clients.NewNamingClient(
 		vo.NacosClientParam{
@@ -104,7 +104,7 @@ func NewClientConfig(registryCenterAddress string, clientHandler netty.ChannelHa
 
 	return &serviceConfig{
 		NamingClient:           namingClient,
-		RegistryServerAddrPort: address,
+		RegistryServerAddrPort: addressArray,
 		ClientHandler:          clientHandler,
 		CommonCodec:            commonCodec,
 		Channels:               make(map[string]netty.Channel),
@@ -126,16 +126,19 @@ func createClientConfig() constant.ClientConfig {
 	return *clientConfig
 }
 
-func createServerConfig(address netip.AddrPort) []constant.ServerConfig {
-	// 创建serverConfig的另一种方式
-	serverConfigs := []constant.ServerConfig{
-		*constant.NewServerConfig(
-			address.Addr().String(),
-			uint64(address.Port()),
+func createServerConfig(addresses []netip.AddrPort) []constant.ServerConfig {
+	var serverConfigs []constant.ServerConfig
+
+	for _, addr := range addresses {
+		serverConfig := constant.NewServerConfig(
+			addr.Addr().String(),
+			uint64(addr.Port()),
 			constant.WithScheme("http"),
 			constant.WithContextPath("/nacos"),
-		),
+		)
+		serverConfigs = append(serverConfigs, *serverConfig)
 	}
+
 	return serverConfigs
 }
 
@@ -290,6 +293,20 @@ func ParseAddress(registryCenterAddress string) (address netip.AddrPort, err err
 	addr, _ := net.ResolveIPAddr("ip", addrPortArray[0])
 	port := addrPortArray[1]
 	address, err = netip.ParseAddrPort(addr.String() + ":" + port)
+	return
+}
+
+func ParseAddress4Array(registryCenterAddress []string) (addrArray []netip.AddrPort, err error) {
+	// 解析 域名
+	addrArray = make([]netip.AddrPort, len(registryCenterAddress))
+	for _, addr := range registryCenterAddress {
+		var address netip.AddrPort
+		addrPortArray := strings.Split(addr, ":")
+		addr, _ := net.ResolveIPAddr("ip", addrPortArray[0])
+		port := addrPortArray[1]
+		address, err = netip.ParseAddrPort(addr.String() + ":" + port)
+		addrArray = append(addrArray, address)
+	}
 	return
 }
 

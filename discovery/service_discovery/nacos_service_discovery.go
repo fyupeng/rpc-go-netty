@@ -18,6 +18,17 @@ import (
 */
 func NewServiceConsumer(loadBalancer load_balancer.LoadBalancer, serializerCode int, registryCenterAddress string) ServiceDiscovery {
 
+	registryCenterAddressArray := make([]string, 1)
+	registryCenterAddressArray = append(registryCenterAddressArray, registryCenterAddress)
+
+	return &serviceConsumer{
+		ClientConfig: config.NewClientConfig(registryCenterAddressArray, handler.NewClientHandler(), codec.CommonCodec(0, 8, serializerCode), handler.NewRequestParser(serializerCode)),
+		LoadBalancer: loadBalancer,
+	}
+}
+
+func NewServiceConsumerWithCluster(loadBalancer load_balancer.LoadBalancer, serializerCode int, registryCenterAddress []string) ServiceDiscovery {
+
 	return &serviceConsumer{
 		ClientConfig: config.NewClientConfig(registryCenterAddress, handler.NewClientHandler(), codec.CommonCodec(0, 8, serializerCode), handler.NewRequestParser(serializerCode)),
 		LoadBalancer: loadBalancer,
