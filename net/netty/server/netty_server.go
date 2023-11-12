@@ -10,6 +10,24 @@ import (
 
 func NewNettyServer(serviceAddress, registerAddress string, serializerCode int) RpcServer {
 
+	registerAddressArray := append(make([]string, 1), registerAddress)
+
+	serviceProvider := service_provider.NewDefaultServiceProvider()
+
+	serverHandler := handler.NewServerHandler(serviceProvider, serializerCode)
+
+	serviceRegistry := service_registry.NewNacosServiceRegistry(serviceAddress, registerAddressArray, serverHandler, serializerCode)
+
+	return &nettyServerStarter{
+		serverAddress:   serviceAddress,
+		serviceRegistry: serviceRegistry,
+		serviceProvider: serviceProvider,
+	}
+
+}
+
+func NewNettyServerWithCluster(serviceAddress string, registerAddress []string, serializerCode int) RpcServer {
+
 	serviceProvider := service_provider.NewDefaultServiceProvider()
 
 	serverHandler := handler.NewServerHandler(serviceProvider, serializerCode)

@@ -11,7 +11,7 @@ import (
 *
 服务提供者 实现 服务注册器接口（服务提供者拥有了服务注册的行为）
 */
-func NewNacosServiceRegistry(serviceAddress, registerAddress string, serverHandler netty.ChannelHandler, serializerCode int) ServiceRegistry {
+func NewNacosServiceRegistry(serviceAddress string, registerAddress []string, serverHandler netty.ChannelHandler, serializerCode int) ServiceRegistry {
 
 	return &nacosServiceRegistry{
 		ServerConfig:       config.NewServerConfig(serviceAddress, registerAddress, serverHandler, codec.CommonCodec(0, 8, serializerCode)),
