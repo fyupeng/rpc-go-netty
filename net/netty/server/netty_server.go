@@ -9,8 +9,8 @@ import (
 )
 
 func NewNettyServer(serviceAddress, registerAddress string, serializerCode int) RpcServer {
-
-	registerAddressArray := append(make([]string, 1), registerAddress)
+	var registerAddressArray []string
+	registerAddressArray = append(registerAddressArray, registerAddress)
 
 	serviceProvider := service_provider.NewDefaultServiceProvider()
 

@@ -52,6 +52,10 @@ func NewServerConfig(serviceAddress string, registryServerAddress []string, serv
 		},
 	)
 
+	if err != nil {
+		log.Println("create NewNamingClient failed: ", err)
+	}
+
 	return &serviceConfig{
 		RegistryServerAddrPort: registryServerAddrPort,
 		ServiceAddrPort:        serviceAddrPort,
@@ -102,6 +106,10 @@ func NewClientConfig(registryCenterAddress []string, clientHandler netty.Channel
 		},
 	)
 
+	if err != nil {
+		log.Println("create NewNamingClient failed: ", err)
+	}
+
 	return &serviceConfig{
 		NamingClient:           namingClient,
 		RegistryServerAddrPort: addressArray,
@@ -125,6 +133,20 @@ func createClientConfig() constant.ClientConfig {
 	)
 	return *clientConfig
 }
+
+//func createServerConfig(addresses []netip.AddrPort) []constant.ServerConfig {
+//
+//	addr := addresses[0]
+//	serverConfigs := []constant.ServerConfig{
+//		*constant.NewServerConfig(
+//			addr.Addr().String(),
+//			uint64(addr.Port()),
+//			constant.WithScheme("http"),
+//			constant.WithContextPath("/nacos"),
+//		),
+//	}
+//	return serverConfigs
+//}
 
 func createServerConfig(addresses []netip.AddrPort) []constant.ServerConfig {
 	var serverConfigs []constant.ServerConfig
@@ -298,14 +320,13 @@ func ParseAddress(registryCenterAddress string) (address netip.AddrPort, err err
 
 func ParseAddress4Array(registryCenterAddress []string) (addrArray []netip.AddrPort, err error) {
 	// 解析 域名
-	addrArray = make([]netip.AddrPort, len(registryCenterAddress))
-	for _, addr := range registryCenterAddress {
-		var address netip.AddrPort
-		addrPortArray := strings.Split(addr, ":")
+	for _, address := range registryCenterAddress {
+		var targetAddress netip.AddrPort
+		addrPortArray := strings.Split(address, ":")
 		addr, _ := net.ResolveIPAddr("ip", addrPortArray[0])
 		port := addrPortArray[1]
-		address, err = netip.ParseAddrPort(addr.String() + ":" + port)
-		addrArray = append(addrArray, address)
+		targetAddress, err = netip.ParseAddrPort(addr.String() + ":" + port)
+		addrArray = append(addrArray, targetAddress)
 	}
 	return
 }

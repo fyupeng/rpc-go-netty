@@ -42,8 +42,6 @@ func (resp *responseParser) HandleWrite(ctx netty.OutboundContext, message netty
 	if err != nil {
 		log.Fatal(fmt.Sprintf("get checkData serializer failed,origin: %v, after: %s", result, checkData))
 	}
-	fmt.Println("checkData")
-	fmt.Println(checkData)
 
 	checkCode, err := aes.Encrypt(string(checkData))
 	if err != nil {
