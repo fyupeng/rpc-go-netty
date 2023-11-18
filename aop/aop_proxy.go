@@ -1,6 +1,7 @@
 package aop
 
 import (
+	"fmt"
 	"reflect"
 	"rpc-go-netty/net/netty/client"
 	"strings"
@@ -77,9 +78,14 @@ func (proxy *clientProxy) Invoke(interfaceType reflect.Type, methodName string, 
 
 	// 封装成sendRequest
 
-	proxy.nettyClient.SendRequest(interfaceName, methodName, parameters, paramTypes, returnTypes)
+	completeFuture := proxy.nettyClient.SendRequest(interfaceName, methodName, parameters, paramTypes, returnTypes)
 
-	time.Sleep(time.Second * 100)
+	futureResult, err := completeFuture.GetFuture()
+
+	fmt.Println(err)
+	fmt.Println(futureResult)
+
+	time.Sleep(time.Second * 10)
 
 }
 

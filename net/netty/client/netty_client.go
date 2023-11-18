@@ -1,7 +1,9 @@
 package client
 
 import (
+	"fmt"
 	"log"
+	"reflect"
 	"rpc-go-netty/discovery/load_balancer"
 	"rpc-go-netty/discovery/service_discovery"
 	"rpc-go-netty/factory"
@@ -23,6 +25,7 @@ func NewNettyClient2Alone(loadBalancer load_balancer.LoadBalancer, serializerCod
 	return &nettyClient{
 		ServiceConsumer: service_discovery.NewServiceConsumer(loadBalancer, serializerCode, registryCenterAddress),
 		IdWorker:        worker,
+		unProcessResult: (factory.GetInstance(reflect.TypeOf((*future.UnProcessResult)(nil)))).(*future.UnProcessResult),
 	}
 }
 
@@ -34,14 +37,14 @@ func NewNettyClient2Cluster(loadBalancer load_balancer.LoadBalancer, serializerC
 	return &nettyClient{
 		ServiceConsumer: service_discovery.NewServiceConsumerWithCluster(loadBalancer, serializerCode, registryCenterAddress),
 		IdWorker:        worker,
-		unProcessResult: (factory.GetInstance(future.NewUnprocessResult()).Data).(future.UnProcessResult),
+		unProcessResult: (factory.GetInstance(reflect.TypeOf((*future.UnProcessResult)(nil)))).(*future.UnProcessResult),
 	}
 }
 
 type nettyClient struct {
 	ServiceConsumer service_discovery.ServiceDiscovery
 	IdWorker        idworker.IdWorker
-	unProcessResult future.UnProcessResult
+	unProcessResult *future.UnProcessResult
 }
 
 func (nettyClient *nettyClient) SendRequest(interfaceName string, methodName string, parameters []interface{}, paramTypes []string, returnTypes []string) *future.CompleteFuture {
@@ -60,6 +63,8 @@ func (nettyClient *nettyClient) SendRequest(interfaceName string, methodName str
 
 	completeFuture := future.NewCompleteFuture(make(chan interface{}), time.Second*10)
 	//unProcessResult := NewUnprocessResult()
+	fmt.Println("nettyClient.unProcessResult")
+	fmt.Println(nettyClient.unProcessResult)
 	nettyClient.unProcessResult.Put(requestId, completeFuture)
 
 	err := channel.Write(message)

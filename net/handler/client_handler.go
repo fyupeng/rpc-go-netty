@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/go-netty/go-netty"
 	"log"
+	"reflect"
 	"rpc-go-netty/factory"
 	"rpc-go-netty/net/netty/future"
 	"rpc-go-netty/protocol"
@@ -10,13 +11,13 @@ import (
 
 func NewClientHandler() netty.ChannelHandler {
 	return &clientHandler{
-		unProcessResult: (factory.GetInstance(future.NewUnprocessResult()).Data).(future.UnProcessResult),
+		unProcessResult: (factory.GetInstance(reflect.TypeOf((*future.UnProcessResult)(nil)))).(*future.UnProcessResult),
 	}
 }
 
 type clientHandler struct {
 	idleEvent       int32
-	unProcessResult future.UnProcessResult
+	unProcessResult *future.UnProcessResult
 }
 
 func (h *clientHandler) HandleActive(ctx netty.ActiveContext) {

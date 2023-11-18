@@ -1,20 +1,33 @@
 package factory
 
-import "sync"
+import (
+	"github.com/modern-go/concurrent"
+	"log"
+	"reflect"
+	"rpc-go-netty/net/netty/future"
+)
 
-type Singleton struct {
-	Data interface{}
+type singleton struct {
+	Data concurrent.Map
 	// 这里可以添加其他需要的字段
 }
 
-var instance *Singleton
-var once sync.Once
+var instance = &singleton{}
 
-func GetInstance(message interface{}) *Singleton {
-	once.Do(func() {
-		instance = &Singleton{
-			Data: message, // 设置实例的初始数据
+func GetInstance(structType reflect.Type) interface{} {
+	var structValue interface{}
+	switch structType.Elem().Name() {
+	case "UnProcessResult":
+		var hasFound bool
+		structValue, hasFound = instance.Data.Load(structType)
+		if hasFound {
+			return structValue
 		}
-	})
-	return instance
+		structValue = future.NewUnprocessResult()
+		instance.Data.Store(structType, structValue)
+	default:
+		log.Fatal("GetInstance failed: not found struct Type ", structType)
+	}
+
+	return structValue
 }
