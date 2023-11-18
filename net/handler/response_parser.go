@@ -51,9 +51,11 @@ func (resp *responseParser) HandleWrite(ctx netty.OutboundContext, message netty
 	response.SetCheckCode(checkCode)
 
 	// goLang 的 base64 是 以 "_" 作为分隔符，而 java 以 / 作为分隔符
-
-	log.Println("prepare response for golang protocol transfer to java:: ", message)
-
+	if serializer.SJsonSerializerCode == resp.serializerCode {
+		log.Println("prepare response for golang protocol transfer to java:", message)
+	} else {
+		log.Println("prepare response for golang protocol transfer to golang:", message)
+	}
 	ctx.HandleWrite(message)
 }
 
@@ -63,8 +65,6 @@ func (h *responseParser) HandleInactive(ctx netty.InactiveContext, ex netty.Exce
 }
 
 func (h *responseParser) HandleRead(ctx netty.InboundContext, message netty.Message) {
-
-	log.Println("protocolHandler receive message from server: ", message)
 
 	ctx.HandleRead(message)
 }

@@ -8,7 +8,7 @@ import (
 
 func TestAesEncoder(t *testing.T) {
 
-	cal := "VYGThW0MXPf4v88IKP/o4g=="
+	cal := "o53cnwtKwHd8XT8hjohYCsWJl6dhySqA38mIXxx/4EXrQV6j6ZqfdLxR2cZ1W5Waqpxn2dj2ynm2/7lGfJSzMA=="
 	// 揭秘
 	decrypt, _ := aes.Decrypt(cal)
 	fmt.Println(decrypt)

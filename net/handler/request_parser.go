@@ -27,12 +27,19 @@ func (h *requestParser) HandleActive(ctx netty.ActiveContext) {
 
 func (req *requestParser) HandleWrite(ctx netty.OutboundContext, message netty.Message) {
 	//TODO implement me
-	log.Println("prepare request for golang protocol transfer to java:: ", message)
 
 	request := message.(protocol.RequestProtocol)
 	request.SetParamTypes(adaptParamTypes(req.serializerCode, request.GetParamTypes()))
 	request.SetReturnType(adaptReturnTypes(req.serializerCode, request.GetReturnType()))
 	request.SetMethodName(adaptJavaMethodName(req.serializerCode, request.GetMethodName()))
+
+	// goLang 的 base64 是 以 "_" 作为分隔符，而 java 以 / 作为分隔符
+	if serializer.SJsonSerializerCode == req.serializerCode {
+		log.Println("prepare response for golang protocol transfer to java:", message)
+	} else {
+		log.Println("prepare response for golang protocol transfer to golang:", message)
+
+	}
 
 	ctx.HandleWrite(message)
 }
@@ -43,8 +50,6 @@ func (req *requestParser) HandleInactive(ctx netty.InactiveContext, ex netty.Exc
 }
 
 func (req *requestParser) HandleRead(ctx netty.InboundContext, message netty.Message) {
-
-	log.Println("protocolHandler receive message from server: ", message)
 
 	ctx.HandleRead(message)
 }

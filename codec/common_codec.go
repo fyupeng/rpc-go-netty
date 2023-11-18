@@ -160,9 +160,6 @@ func (codec *commonCodec) HandleRead(ctx netty.InboundContext, message netty.Mes
 		log.Fatal("err: ", err)
 	}
 
-	log.Println("dataBytes")
-	log.Println(mes)
-
 	data, err1 := seria.Deserialize(dataBytes, packageProtocol)
 
 	if err1 != nil {

@@ -41,6 +41,7 @@ type ResponseProtocol interface {
 	Success(requestId string, data interface{}) Protocol
 	SuccessWithCheckCode(requestId string, data interface{}, dataType string, checkCode string) Protocol
 
+	GetRequestId() string
 	GetData() interface{}
 	SetData(data interface{})
 	GetCheckCode() string

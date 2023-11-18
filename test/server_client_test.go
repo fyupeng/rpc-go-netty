@@ -17,7 +17,7 @@ import (
 )
 
 func TestProxy(t *testing.T) {
-	client := client.NewNettyClient2Alone(load_balancer.NewRandLoadBalancer(), serializer.CJsonSerializerCode, "127.0.0.1:8848")
+	client := client.NewNettyClient2Alone(load_balancer.NewRandLoadBalancer(), serializer.JsonSerializerCode, "127.0.0.1:8848")
 	h := aop.NewClientProxy(client)
 	h.Invoke(reflect.TypeOf((*cn_fyupeng_service.HelloWorldService)(nil)), "SayHello", []interface{}{"这是go代理端"})
 }
@@ -63,7 +63,7 @@ func TestClient(t *testing.T) {
 }
 
 func TestServer(t *testing.T) {
-	nacosServer := server.NewNettyServer("192.168.43.33:9527", "127.0.0.1:8848", serializer.SJsonSerializerCode)
+	nacosServer := server.NewNettyServer("192.168.5.191:9527", "127.0.0.1:8848", serializer.JsonSerializerCode)
 
 	nacosServer.PublishService(&cn_fyupeng_service.HelloWorldServiceImpl{})
 

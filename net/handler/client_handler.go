@@ -3,15 +3,20 @@ package handler
 import (
 	"github.com/go-netty/go-netty"
 	"log"
+	"rpc-go-netty/factory"
+	"rpc-go-netty/net/netty/future"
 	"rpc-go-netty/protocol"
 )
 
 func NewClientHandler() netty.ChannelHandler {
-	return &clientHandler{}
+	return &clientHandler{
+		unProcessResult: (factory.GetInstance(future.NewUnprocessResult()).Data).(future.UnProcessResult),
+	}
 }
 
 type clientHandler struct {
-	idleEvent int32
+	idleEvent       int32
+	unProcessResult future.UnProcessResult
 }
 
 func (h *clientHandler) HandleActive(ctx netty.ActiveContext) {
@@ -33,6 +38,10 @@ func (h *clientHandler) HandleInactive(ctx netty.InactiveContext, ex netty.Excep
 func (h *clientHandler) HandleRead(ctx netty.InboundContext, message netty.Message) {
 
 	log.Println("client receive message from server: ", message)
+
+	response := message.(protocol.ResponseProtocol)
+
+	h.unProcessResult.Complete(response.GetRequestId(), response)
 
 	//ctx.HandleRead(message)
 }

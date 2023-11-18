@@ -121,6 +121,11 @@ func (rpcResponseProtocol *rpcResponseProtocol) SuccessWithCheckCode(requestId s
 	return rpcResponseProtocol
 }
 
+func (rpcResponseProtocol *rpcResponseProtocol) GetRequestId() string {
+	return rpcResponseProtocol.RequestId
+
+}
+
 func (rpcResponseProtocol *rpcResponseProtocol) GetData() interface{} {
 	return rpcResponseProtocol.Data
 }
