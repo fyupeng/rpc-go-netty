@@ -28,7 +28,6 @@ func RegisterPoint(pointType reflect.Type) {
 			guard.Unpatch()
 			defer guard.Restore()
 			receiver := in[0]
-			fmt.Println(receiver)
 			point := NewJoinPoint(receiver, in[1:], method)
 			defer finallyProcessed(point, methodLocation)
 			// 执行 前置处理

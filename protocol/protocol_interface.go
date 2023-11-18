@@ -29,6 +29,8 @@ type RequestProtocol interface {
 	GetHeartBeat() bool
 	GetReturnType() string
 	SetReturnType(returnType string)
+	GetGroup() string
+	SetGroup(group string)
 }
 
 /*

@@ -1,8 +1,8 @@
 package client
 
 import (
-	"fmt"
 	"log"
+	"net/netip"
 	"reflect"
 	"rpc-go-netty/discovery/load_balancer"
 	"rpc-go-netty/discovery/service_discovery"
@@ -10,7 +10,6 @@ import (
 	"rpc-go-netty/net/netty/future"
 	"rpc-go-netty/protocol"
 	"rpc-go-netty/utils/idworker"
-	"strconv"
 	"time"
 )
 
@@ -30,25 +29,27 @@ func NewNettyClient2Alone(loadBalancer load_balancer.LoadBalancer, serializerCod
 }
 
 func NewNettyClient2Cluster(loadBalancer load_balancer.LoadBalancer, serializerCode int, registryCenterAddress []string) RpcClient {
-	worker, err := idworker.NewNowWorker(0)
-	if err != nil {
-		log.Fatal("id create failed: ", err)
-	}
 	return &nettyClient{
 		ServiceConsumer: service_discovery.NewServiceConsumerWithCluster(loadBalancer, serializerCode, registryCenterAddress),
-		IdWorker:        worker,
 		unProcessResult: (factory.GetInstance(reflect.TypeOf((*future.UnProcessResult)(nil)))).(*future.UnProcessResult),
 	}
 }
 
 type nettyClient struct {
 	ServiceConsumer service_discovery.ServiceDiscovery
-	IdWorker        idworker.IdWorker
 	unProcessResult *future.UnProcessResult
+	IdWorker        idworker.IdWorker
 }
 
-func (nettyClient *nettyClient) SendRequest(interfaceName string, methodName string, parameters []interface{}, paramTypes []string, returnTypes []string) *future.CompleteFuture {
-	serviceAddr, getServiceErr := nettyClient.ServiceConsumer.LookupServiceWithGroupName(interfaceName, "1.0.1")
+func (nettyClient *nettyClient) SendRequest(rpcRequest protocol.RequestProtocol) *future.CompleteFuture {
+	groupName := rpcRequest.GetGroup()
+	var serviceAddr netip.AddrPort
+	var getServiceErr error
+	if groupName != "" {
+		serviceAddr, getServiceErr = nettyClient.ServiceConsumer.LookupServiceWithGroupName(rpcRequest.GetInterfaceName(), groupName)
+	} else {
+		serviceAddr, getServiceErr = nettyClient.ServiceConsumer.LookupService(rpcRequest.GetInterfaceName())
+	}
 
 	if getServiceErr != nil {
 		log.Fatal("get Service Fatal: ", getServiceErr)
@@ -56,16 +57,12 @@ func (nettyClient *nettyClient) SendRequest(interfaceName string, methodName str
 
 	channel := nettyClient.ServiceConsumer.GetChannel(serviceAddr.String())
 
-	requestId := strconv.FormatInt(nettyClient.IdWorker.NextId(), 10)
-
-	message := protocol.RpcRequestProtocol(requestId, interfaceName, methodName, parameters,
-		paramTypes, returnTypes[0], false, "1.0.1", false)
+	message := protocol.RpcRequestProtocol(rpcRequest.GetRequestId(), rpcRequest.GetInterfaceName(), rpcRequest.GetMethodName(), rpcRequest.GetParameters(),
+		rpcRequest.GetParamTypes(), rpcRequest.GetReturnType(), false, rpcRequest.GetGroup(), false)
 
 	completeFuture := future.NewCompleteFuture(make(chan interface{}), time.Second*10)
 	//unProcessResult := NewUnprocessResult()
-	fmt.Println("nettyClient.unProcessResult")
-	fmt.Println(nettyClient.unProcessResult)
-	nettyClient.unProcessResult.Put(requestId, completeFuture)
+	nettyClient.unProcessResult.Put(rpcRequest.GetRequestId(), completeFuture)
 
 	err := channel.Write(message)
 	if err != nil {

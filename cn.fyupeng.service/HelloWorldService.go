@@ -6,7 +6,7 @@ type HelloWorldService interface {
 
 type HelloWorldServiceImpl struct {
 	name  string `annotation:"cn.fyupeng.service.HelloWorldService"`
-	group string `annotation:"1.0.1"`
+	group string `annotation:"1.0.0"`
 }
 
 func (helloService *HelloWorldServiceImpl) SayHello(message string) string {

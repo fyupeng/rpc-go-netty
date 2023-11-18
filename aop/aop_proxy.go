@@ -2,8 +2,13 @@ package aop
 
 import (
 	"fmt"
+	"log"
 	"reflect"
+	"rpc-go-netty/annotation"
 	"rpc-go-netty/net/netty/client"
+	"rpc-go-netty/protocol"
+	"rpc-go-netty/utils/idworker"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -35,16 +40,28 @@ func (a *Aspect) GetAspectExpress() string {
 
 type Proxy interface {
 	Invoke(interfaceType reflect.Type, methodName string, parameters []interface{})
+	AddAnnotation(annotation *annotation.Annotation)
 }
 
 func NewClientProxy(nettyClient client.RpcClient) Proxy {
+	worker, err := idworker.NewNowWorker(0)
+	if err != nil {
+		log.Fatal("id create failed: ", err)
+	}
 	return &clientProxy{
 		nettyClient: nettyClient,
+		IdWorker:    worker,
 	}
 }
 
 type clientProxy struct {
 	nettyClient client.RpcClient
+	IdWorker    idworker.IdWorker
+	annot       *annotation.Annotation
+}
+
+func (proxy *clientProxy) AddAnnotation(annotation *annotation.Annotation) {
+	proxy.annot = annotation
 }
 
 func (proxy *clientProxy) Invoke(interfaceType reflect.Type, methodName string, parameters []interface{}) {
@@ -77,12 +94,29 @@ func (proxy *clientProxy) Invoke(interfaceType reflect.Type, methodName string, 
 	}
 
 	// 封装成sendRequest
+	requestId := strconv.FormatInt(proxy.IdWorker.NextId(), 10)
 
-	completeFuture := proxy.nettyClient.SendRequest(interfaceName, methodName, parameters, paramTypes, returnTypes)
+	groupName := ""
+
+	if proxy.annot.GroupName != "" || proxy.annot.ServiceName != "" {
+		if proxy.annot.GroupName != "" {
+			groupName = proxy.annot.GroupName
+		}
+		if proxy.annot.ServiceName != "" {
+			interfaceName = proxy.annot.ServiceName
+		}
+	}
+
+	rpcRequest := protocol.RpcRequestProtocol(requestId, interfaceName, methodName, parameters, paramTypes, returnTypes[0], false, groupName, false)
+
+	completeFuture := proxy.nettyClient.SendRequest(rpcRequest)
 
 	futureResult, err := completeFuture.GetFuture()
 
-	fmt.Println(err)
+	if err != nil {
+		log.Fatal("ClientProxy Invoke failed:", err)
+	}
+
 	fmt.Println(futureResult)
 
 	time.Sleep(time.Second * 10)

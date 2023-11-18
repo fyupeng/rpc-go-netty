@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"rpc-go-netty/annotation"
 	"rpc-go-netty/aop"
 	cn_fyupeng_service "rpc-go-netty/cn.fyupeng.service"
 	"rpc-go-netty/discovery/load_balancer"
@@ -19,6 +20,10 @@ import (
 func TestProxy(t *testing.T) {
 	client := client.NewNettyClient2Alone(load_balancer.NewRandLoadBalancer(), serializer.JsonSerializerCode, "127.0.0.1:8848")
 	h := aop.NewClientProxy(client)
+	h.AddAnnotation(&annotation.Annotation{
+		GroupName:   "1.0.1",
+		ServiceName: "cn.fyupeng.service.HelloWorldService",
+	})
 	h.Invoke(reflect.TypeOf((*cn_fyupeng_service.HelloWorldService)(nil)), "SayHello", []interface{}{"这是go代理端"})
 }
 func TestClient(t *testing.T) {

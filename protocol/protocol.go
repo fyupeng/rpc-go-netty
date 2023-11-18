@@ -62,8 +62,15 @@ func (rpcRequestProtocol *rpcRequestProtocol) GetReturnType() string {
 }
 
 func (rpcRequestProtocol *rpcRequestProtocol) SetReturnType(returnType string) {
-	//TODO implement me
 	rpcRequestProtocol.ReturnType = returnType
+}
+
+func (rpcRequestProtocol *rpcRequestProtocol) GetGroup() string {
+	return rpcRequestProtocol.Group
+}
+
+func (rpcRequestProtocol *rpcRequestProtocol) SetGroup(group string) {
+	rpcRequestProtocol.Group = group
 }
 
 type rpcRequestProtocol struct {
