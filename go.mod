@@ -1,4 +1,4 @@
-module rpc-go-netty
+module github.com/fyupeng/rpc-go-netty
 
 go 1.19
 
