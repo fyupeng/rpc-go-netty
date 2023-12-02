@@ -16,7 +16,15 @@ import (
 *
 服务消费者 实现 服务发现接口（服务消费者拥有了服务发现的行为）
 */
-func NewServiceConsumer(loadBalancer load_balancer.LoadBalancer, serializerCode int, registryCenterAddress string) ServiceDiscovery {
+func NewServiceConsumerDirect(serializerCode int, serviceAddress string) ServiceDiscovery {
+
+	return &serviceConsumer{
+		ClientConfig:   config.NewClientConfigDirect(handler.NewClientHandler(), codec.CommonCodec(0, 8, serializerCode), handler.NewRequestParser(serializerCode)),
+		ServiceAddress: serviceAddress,
+	}
+}
+
+func NewServiceConsumerAlone(loadBalancer load_balancer.LoadBalancer, serializerCode int, registryCenterAddress string) ServiceDiscovery {
 	var registryCenterAddressArray []string
 	registryCenterAddressArray = append(registryCenterAddressArray, registryCenterAddress)
 
@@ -35,8 +43,9 @@ func NewServiceConsumerWithCluster(loadBalancer load_balancer.LoadBalancer, seri
 }
 
 type serviceConsumer struct {
-	ClientConfig config.Config
-	LoadBalancer load_balancer.LoadBalancer
+	ClientConfig   config.Config
+	LoadBalancer   load_balancer.LoadBalancer
+	ServiceAddress string
 }
 
 func (serviceConsumer *serviceConsumer) GetChannel(address string) netty.Channel {

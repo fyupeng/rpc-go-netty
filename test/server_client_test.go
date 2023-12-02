@@ -18,17 +18,20 @@ import (
 )
 
 func TestProxy(t *testing.T) {
+	// 直连 方式（不使用 注册中心 和 负载均衡）
+	//client := client.NewNettyClientDirect("192.168.67.191:9527", serializer.JsonSerializerCode)
+	// 通过 注册中心负载获取
 	client := client.NewNettyClient2Alone(load_balancer.NewRandLoadBalancer(), serializer.JsonSerializerCode, "127.0.0.1:8848")
 	h := aop.NewClientProxy(client)
 	h.AddAnnotation(&annotation.Annotation{
-		GroupName:   "1.0.1",
+		GroupName:   "1.0.0",
 		ServiceName: "cn.fyupeng.service.HelloWorldService",
 	})
 	h.Invoke(reflect.TypeOf((*cn_fyupeng_service.HelloWorldService)(nil)), "SayHello", []interface{}{"这是go代理端"})
 }
 func TestClient(t *testing.T) {
 
-	serviceConsumer := service_discovery.NewServiceConsumer(load_balancer.NewRandLoadBalancer(), serializer.JsonSerializerCode, "127.0.0.1:8848")
+	serviceConsumer := service_discovery.NewServiceConsumerAlone(load_balancer.NewRandLoadBalancer(), serializer.JsonSerializerCode, "127.0.0.1:8848")
 
 	//serviceAddr, getServiceErr := serviceConsumer.LookupService("TestService")
 	//
@@ -68,7 +71,7 @@ func TestClient(t *testing.T) {
 }
 
 func TestServer(t *testing.T) {
-	nacosServer := server.NewNettyServer("192.168.5.191:9527", "127.0.0.1:8848", serializer.JsonSerializerCode)
+	nacosServer := server.NewNettyServer("192.168.67.191:9527", "127.0.0.1:8848", serializer.JsonSerializerCode)
 
 	nacosServer.PublishService(&cn_fyupeng_service.HelloWorldServiceImpl{})
 

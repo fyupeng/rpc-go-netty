@@ -88,6 +88,17 @@ type serviceConfig struct {
 	ClientBootstrap netty.Bootstrap
 }
 
+func NewClientConfigDirect(clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler, requestParser netty.ChannelHandler) Config {
+
+	return &serviceConfig{
+		ClientHandler:   clientHandler,
+		CommonCodec:     commonCodec,
+		Channels:        make(map[string]netty.Channel),
+		ClientBootstrap: initClientBootstrap(clientHandler, commonCodec, requestParser),
+	}
+
+}
+
 func NewClientConfig(registryCenterAddress []string, clientHandler netty.ChannelHandler, commonCodec netty.CodecHandler, requestParser netty.ChannelHandler) Config {
 
 	addressArray, err := ParseAddress4Array(registryCenterAddress)
@@ -309,9 +320,9 @@ func (serviceConfig *serviceConfig) DeregisterAllInstanceWithGroupName(groupName
 	return
 }
 
-func ParseAddress(registryCenterAddress string) (address netip.AddrPort, err error) {
+func ParseAddress(addressString string) (address netip.AddrPort, err error) {
 	// 解析 域名
-	addrPortArray := strings.Split(registryCenterAddress, ":")
+	addrPortArray := strings.Split(addressString, ":")
 	addr, _ := net.ResolveIPAddr("ip", addrPortArray[0])
 	port := addrPortArray[1]
 	address, err = netip.ParseAddrPort(addr.String() + ":" + port)
