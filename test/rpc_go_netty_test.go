@@ -5,5 +5,5 @@ import (
 )
 
 func TestRpcGoNetty(t *testing.T) {
-	netty
+
 }
