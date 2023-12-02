@@ -71,14 +71,13 @@ func TestClient(t *testing.T) {
 }
 
 func TestServer(t *testing.T) {
+	// 创建 服务端 和 连接 注册中心
 	nacosServer := server.NewNettyServer("192.168.67.191:9527", "127.0.0.1:8848", serializer.JsonSerializerCode)
-
+	// 发布 服务
 	nacosServer.PublishService(&cn_fyupeng_service.HelloWorldServiceImpl{})
-
+	// 启动服务 并 监听 客户端请求
 	err := nacosServer.Start()
-
 	if err != nil {
 		log.Fatal("start nacosServer failed:", err)
 	}
-
 }
