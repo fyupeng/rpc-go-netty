@@ -29,7 +29,7 @@
 
 ### 版本链
 
-- [ [#v0.1.1](https://pkg.go.dev/github.com/fyupeng/rpc-go-netty@v0.1.1) ]：Repair the empty results abnormal response to a question.
+- [ [#v0.1.7](https://pkg.go.dev/github.com/fyupeng/rpc-go-netty@v0.1.7) ]：Clinical Test Version.
 
 
 ### 附
