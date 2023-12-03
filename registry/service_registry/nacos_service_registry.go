@@ -1,10 +1,10 @@
 package service_registry
 
 import (
+	"github.com/fyupeng/rpc-go-netty/codec"
+	"github.com/fyupeng/rpc-go-netty/config"
+	"github.com/fyupeng/rpc-go-netty/net/handler"
 	"github.com/go-netty/go-netty"
-	"rpc-go-netty/codec"
-	"rpc-go-netty/config"
-	"rpc-go-netty/net/handler"
 )
 
 /*

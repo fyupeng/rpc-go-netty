@@ -3,10 +3,10 @@ package test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/fyupeng/rpc-go-netty/protocol"
+	"github.com/fyupeng/rpc-go-netty/serializer"
 	jsoniter "github.com/json-iterator/go"
 	"log"
-	"rpc-go-netty/protocol"
-	"rpc-go-netty/serializer"
 	"testing"
 )
 

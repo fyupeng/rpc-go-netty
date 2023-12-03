@@ -2,12 +2,12 @@ package aop
 
 import (
 	"fmt"
+	"github.com/fyupeng/rpc-go-netty/annotation"
+	"github.com/fyupeng/rpc-go-netty/net/netty/client"
+	"github.com/fyupeng/rpc-go-netty/protocol"
+	"github.com/fyupeng/rpc-go-netty/utils/idworker"
 	"log"
 	"reflect"
-	"rpc-go-netty/annotation"
-	"rpc-go-netty/net/netty/client"
-	"rpc-go-netty/protocol"
-	"rpc-go-netty/utils/idworker"
 	"strconv"
 	"strings"
 	"time"

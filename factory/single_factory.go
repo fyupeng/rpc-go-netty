@@ -1,10 +1,10 @@
 package factory
 
 import (
+	"github.com/fyupeng/rpc-go-netty/net/netty/future"
 	"github.com/modern-go/concurrent"
 	"log"
 	"reflect"
-	"rpc-go-netty/net/netty/future"
 )
 
 type singleton struct {

@@ -1,16 +1,16 @@
 package client
 
 import (
+	"github.com/fyupeng/rpc-go-netty/config"
+	"github.com/fyupeng/rpc-go-netty/discovery/load_balancer"
+	"github.com/fyupeng/rpc-go-netty/discovery/service_discovery"
+	"github.com/fyupeng/rpc-go-netty/factory"
+	"github.com/fyupeng/rpc-go-netty/net/netty/future"
+	"github.com/fyupeng/rpc-go-netty/protocol"
+	"github.com/fyupeng/rpc-go-netty/utils/idworker"
 	"log"
 	"net/netip"
 	"reflect"
-	"rpc-go-netty/config"
-	"rpc-go-netty/discovery/load_balancer"
-	"rpc-go-netty/discovery/service_discovery"
-	"rpc-go-netty/factory"
-	"rpc-go-netty/net/netty/future"
-	"rpc-go-netty/protocol"
-	"rpc-go-netty/utils/idworker"
 	"strings"
 	"time"
 )

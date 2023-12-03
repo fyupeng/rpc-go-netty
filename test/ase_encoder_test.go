@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"rpc-go-netty/utils/aes"
+	"github.com/fyupeng/rpc-go-netty/utils/aes"
 	"testing"
 )
 

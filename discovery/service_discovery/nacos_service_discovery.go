@@ -1,14 +1,14 @@
 package service_discovery
 
 import (
+	"github.com/fyupeng/rpc-go-netty/codec"
+	"github.com/fyupeng/rpc-go-netty/config"
+	"github.com/fyupeng/rpc-go-netty/discovery/load_balancer"
+	"github.com/fyupeng/rpc-go-netty/net/handler"
 	"github.com/go-netty/go-netty"
 	"github.com/nacos-group/nacos-sdk-go/model"
 	"net"
 	"net/netip"
-	"rpc-go-netty/codec"
-	"rpc-go-netty/config"
-	"rpc-go-netty/discovery/load_balancer"
-	"rpc-go-netty/net/handler"
 	"strconv"
 )
 

@@ -2,8 +2,8 @@ package test
 
 import (
 	"fmt"
+	"github.com/fyupeng/rpc-go-netty/net/netty/future"
 	"reflect"
-	"rpc-go-netty/net/netty/future"
 	"testing"
 )
 

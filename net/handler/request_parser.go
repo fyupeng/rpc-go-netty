@@ -2,11 +2,11 @@ package handler
 
 import (
 	"fmt"
+	"github.com/fyupeng/rpc-go-netty/protocol"
+	"github.com/fyupeng/rpc-go-netty/serializer"
 	"github.com/go-netty/go-netty"
 	"log"
 	"reflect"
-	"rpc-go-netty/protocol"
-	"rpc-go-netty/serializer"
 )
 
 func NewRequestParser(serializerCode int) netty.ChannelHandler {

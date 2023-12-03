@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"rpc-go-netty/utils/idworker"
+	"github.com/fyupeng/rpc-go-netty/utils/idworker"
 	"strconv"
 	"testing"
 )

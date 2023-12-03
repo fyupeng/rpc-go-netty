@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"rpc-go-netty/net/netty/future"
+	"github.com/fyupeng/rpc-go-netty/net/netty/future"
 	"testing"
 	"time"
 )

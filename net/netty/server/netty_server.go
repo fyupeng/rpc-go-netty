@@ -1,11 +1,11 @@
 package server
 
 import (
+	"github.com/fyupeng/rpc-go-netty/net/handler"
+	"github.com/fyupeng/rpc-go-netty/provider/service_provider"
+	"github.com/fyupeng/rpc-go-netty/registry/service_registry"
 	"log"
 	"reflect"
-	"rpc-go-netty/net/handler"
-	"rpc-go-netty/provider/service_provider"
-	"rpc-go-netty/registry/service_registry"
 )
 
 func NewNettyServer(serviceAddress, registerAddress string, serializerCode int) RpcServer {
