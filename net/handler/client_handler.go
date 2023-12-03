@@ -7,6 +7,7 @@ import (
 	"github.com/go-netty/go-netty"
 	"log"
 	"reflect"
+	"strings"
 )
 
 func NewClientHandler() netty.ChannelHandler {
@@ -49,6 +50,10 @@ func (h *clientHandler) HandleRead(ctx netty.InboundContext, message netty.Messa
 
 func (h *clientHandler) HandleException(ctx netty.ExceptionContext, ex netty.Exception) {
 	// 处理异常情况
+	// fix
+	if ex != nil && strings.EqualFold(ex.Error(), "EOF") {
+		return
+	}
 	log.Println("Exception caught:", ex)
 	//ctx.HandleException(ex)
 }

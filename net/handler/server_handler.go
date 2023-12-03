@@ -7,6 +7,7 @@ import (
 	"github.com/fyupeng/rpc-go-netty/provider/service_provider"
 	"github.com/go-netty/go-netty"
 	"log"
+	"strings"
 	"sync/atomic"
 )
 
@@ -78,6 +79,12 @@ func (h *serverHandler) HandleRead(ctx netty.InboundContext, message netty.Messa
 }
 
 func (h *serverHandler) HandleException(ctx netty.ExceptionContext, ex netty.Exception) {
+	// fix
+	fmt.Println("server_handler handleException ex.Error()", ex.Error())
+	if ex != nil && strings.EqualFold(ex.Error(), "EOF") {
+		fmt.Println("server_handler handleException ex.Error() true", ex.Error())
+		return
+	}
 	// 处理异常情况
 	fmt.Println("Exception caught:", ex)
 	ctx.Close(ex)

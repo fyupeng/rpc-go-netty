@@ -7,6 +7,7 @@ import (
 	"github.com/go-netty/go-netty"
 	"log"
 	"reflect"
+	"strings"
 )
 
 func NewRequestParser(serializerCode int) netty.ChannelHandler {
@@ -56,6 +57,14 @@ func (req *requestParser) HandleRead(ctx netty.InboundContext, message netty.Mes
 
 func (req *requestParser) HandleException(ctx netty.ExceptionContext, ex netty.Exception) {
 	// 处理异常情况
+	// fix
+	fmt.Println("server_handler handleException ex.Error()", ex.Error())
+	if ex != nil && strings.EqualFold(ex.Error(), "EOF") {
+		// 如果是 EOF 异常，不进行打印输出
+		ctx.Close(ex)
+		return
+	}
+
 	log.Println("Exception caught:", ex)
 	//ctx.HandleException(ex)
 }
