@@ -73,13 +73,12 @@ func (h *responseParser) HandleRead(ctx netty.InboundContext, message netty.Mess
 func (h *responseParser) HandleException(ctx netty.ExceptionContext, ex netty.Exception) {
 	// 处理异常情况
 	// fix
-	fmt.Println("server_handler handleException ex.Error()", ex.Error())
 	if ex != nil && strings.EqualFold(ex.Error(), "EOF") {
-		fmt.Println("response_parser handleException ex.Error() true", ex.Error())
 		return
 	}
 
 	log.Println("Exception caught:", ex)
+	ctx.Close(ex)
 	//ctx.HandleException(ex)
 }
 

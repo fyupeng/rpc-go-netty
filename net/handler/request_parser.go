@@ -61,11 +61,11 @@ func (req *requestParser) HandleException(ctx netty.ExceptionContext, ex netty.E
 	fmt.Println("server_handler handleException ex.Error()", ex.Error())
 	if ex != nil && strings.EqualFold(ex.Error(), "EOF") {
 		// 如果是 EOF 异常，不进行打印输出
-		ctx.Close(ex)
 		return
 	}
 
 	log.Println("Exception caught:", ex)
+	ctx.Close(ex)
 	//ctx.HandleException(ex)
 }
 

@@ -55,6 +55,7 @@ func (h *clientHandler) HandleException(ctx netty.ExceptionContext, ex netty.Exc
 		return
 	}
 	log.Println("Exception caught:", ex)
+	ctx.Close(ex)
 	//ctx.HandleException(ex)
 }
 
