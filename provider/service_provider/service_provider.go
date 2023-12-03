@@ -2,7 +2,6 @@ package service_provider
 
 import (
 	"log"
-	"reflect"
 	"sync"
 )
 
@@ -48,9 +47,5 @@ func (serviceProvider *defaultServiceProvider) AddService(service interface{}, s
 	serviceProvider.Services[serviceName] = true
 
 	serviceProvider.Services[serviceName] = service
-
-	serviceValue := reflect.ValueOf(service)
-
-	log.Printf("Register cn.fyupeng.service: %v with interface %v", serviceValue, serviceName)
 
 }

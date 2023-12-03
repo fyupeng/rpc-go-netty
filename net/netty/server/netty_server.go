@@ -64,18 +64,23 @@ func (server *nettyServerStarter) PublishService(services ...interface{}) {
 
 		if nameField, isValid := structType.FieldByName("name"); isValid {
 			interfaceName = nameField.Tag.Get("annotation")
+			log.Printf("Found service %s which Field: %s, Annotation: %s\n", structType, "name", interfaceName)
 		}
 
 		if groupField, isValid := structType.FieldByName("group"); isValid {
 			groupName = groupField.Tag.Get("annotation")
+			log.Printf("Found service %s which Field: %s, Annotation: %s\n", structType, "group", groupName)
 		}
 
 		server.serviceProvider.AddService(service, interfaceName)
 
 		err := server.serviceRegistry.RegisterWithGroupName(interfaceName, groupName)
 		if err != nil {
-			log.Fatal("publish fatail: ", err)
+			log.Fatal("interfaceName publish failed: ", err)
 		}
+
+		log.Printf("Register service %v with interface %v\n", structType, interfaceName)
+
 	}
 
 	return
